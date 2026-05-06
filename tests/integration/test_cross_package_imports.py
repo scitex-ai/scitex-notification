@@ -20,6 +20,7 @@ import pytest
 # ===== AUTO-GENERATED: cross-package imports =====
 CROSS_PACKAGE_IMPORTS = [
     'scitex_audio',
+    'scitex_browser.debugging',
     'scitex_dev',
     'scitex_dev._cli._completion',
     'scitex_dev.cli',

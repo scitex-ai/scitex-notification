@@ -85,6 +85,18 @@ class PlaywrightBackend(BaseNotifyBackend):
                 await page.set_viewport_size({"width": 400, "height": 150})
                 await page.set_content(html)
 
+                # PA305 §3: capture debug artifacts (best-effort) for any
+                # post-mortem of notification rendering. Soft-imported so we
+                # don't add a hard dependency on scitex-browser.
+                try:
+                    from scitex_browser.debugging import (
+                        capture_debug_artifacts_async,
+                    )
+
+                    await capture_debug_artifacts_async(page, label="notification")
+                except Exception:
+                    pass
+
                 timeout = kwargs.get("timeout", self.timeout)
                 await asyncio.sleep(timeout)
                 await browser.close()
