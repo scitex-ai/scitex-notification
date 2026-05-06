@@ -135,7 +135,6 @@ def mcp_show_installation_deprecated(ctx):
 @click.option("--dry-run", is_flag=True, help="Accepted for §2; this verb is informational, never mutates state.")
 @click.option("--yes", "-y", is_flag=True, help="Accepted for §2; this verb is informational, never mutates state.")
 def mcp_install(as_json, dry_run, yes):
-    del dry_run, yes  # audit §2 — no-op flags
     """
     Show MCP server installation instructions
 
@@ -144,6 +143,7 @@ def mcp_install(as_json, dry_run, yes):
       scitex-notification mcp install
       scitex-notification mcp install --json
     """
+    del dry_run, yes  # audit §2 — no-op flags
     config = {
         "mcpServers": {
             "scitex-notification": {
