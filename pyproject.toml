@@ -78,6 +78,11 @@ all = [
 [project.scripts]
 scitex-notification = "scitex_notification._cli:main"
 
+[project.entry-points."scitex_dev.linter.plugins"]
+scitex_notification = "scitex_notification._linter_plugin:get_plugin"
+
+# Legacy entry-point group (dual-register during scitex-linter
+# deprecation window — will be dropped after the final shim release).
 [project.entry-points."scitex_linter.plugins"]
 scitex_notification = "scitex_notification._linter_plugin:get_plugin"
 
