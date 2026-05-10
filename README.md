@@ -15,7 +15,7 @@
 <p align="center"><b>One-call alerting across 9 backends — audio, desktop, emacs, matplotlib, playwright, email, webhook, Telegram, Twilio.</b></p>
 
 <p align="center">
-  <a href="https://scitex-notification.readthedocs.io/">Full Documentation</a> · <code>pip install scitex-notification</code>
+  <a href="https://scitex-notification.readthedocs.io/">Full Documentation</a> · <code>uv pip install scitex-notification[all]</code>
 </p>
 
 <!-- scitex-badges:start -->
