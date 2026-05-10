@@ -1,41 +1,51 @@
 name: Publish to PyPI
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       version:
         description: 'Tag to publish (e.g. v0.10.19) — must already exist on the repo'
         required: true
         type: string
+
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version || github.ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build distribution
+        run: python -m build
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
   publish:
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: pypi
       url: https://pypi.org/p/scitex-notification
     permissions:
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.version }}
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Install build tools
-        run: pip install build
-      - name: Build distribution
-        run: python -m build
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-    needs: build
-    runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
       id-token: write   # OIDC for trusted publisher
     steps:
-      - name: Download artifacts
+      - name: Download dist artifacts
         uses: actions/download-artifact@v4
         with:
           name: dist
@@ -56,7 +66,7 @@ jobs:
     permissions:
       contents: write   # gh release create
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - name: Download dist artifacts
         uses: actions/download-artifact@v4
@@ -68,9 +78,6 @@ jobs:
         id: notes
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"
-          # Capture lines from "## [VERSION] " up to (but not including)
-          # the next "## [" heading. Falls back to a one-liner if the
-          # section is missing so the release is still created.
           awk -v v="$VERSION" '
             $0 ~ "^## \\[" v "\\]" {p=1; next}
             p && /^## \[/ {exit}
