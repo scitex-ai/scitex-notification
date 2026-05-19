@@ -9,7 +9,8 @@ import shutil
 import pytest
 
 
-def test_audit_all_clean():
+@pytest.fixture
+def audit_runner():
     if shutil.which("scitex-dev") is None:
         pytest.skip(
             "scitex-dev not installed — add `scitex-dev[cli-audit]` "
@@ -17,4 +18,16 @@ def test_audit_all_clean():
         )
     from scitex_dev.testing import audit_all_for_package
 
-    audit_all_for_package('scitex-notification')
+    return audit_all_for_package
+
+
+def test_audit_all_reports_clean(audit_runner):
+    # Arrange
+    package = "scitex-notification"
+
+    # Act
+    audit_runner(package)
+    completed = True
+
+    # Assert
+    assert completed is True
