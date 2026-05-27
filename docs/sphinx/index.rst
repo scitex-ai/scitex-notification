@@ -43,23 +43,6 @@ Supported Backends
      - Required
      - Slack, Discord, custom endpoints
 
-.. toctree::
-   :maxdepth: 2
-   :caption: User Guide
-
-   quickstart
-   backends
-   configuration
-   env_vars
-
-.. toctree::
-   :maxdepth: 2
-   :caption: API Reference
-
-   api/scitex_notification
-   api/backends
-   api/mcp
-
 Quick Example
 -------------
 
