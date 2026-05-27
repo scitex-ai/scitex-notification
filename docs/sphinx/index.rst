@@ -3,19 +3,19 @@ SciTeX Notification
 
 .. raw:: html
 
-   <p align="center"><b>Multi-backend notification system for scientific workflows</b></p>
+   <p align="center"><b>One-call alerting across 9 backends — audio, desktop, emacs, matplotlib, playwright, email, webhook, Telegram, Twilio.</b></p>
    <br>
 
-**SciTeX Notification** provides a unified interface for sending notifications
-across multiple backends, allowing you to stay informed about long-running
-scientific computations wherever you are.
+**SciTeX Notification** provides a unified alerting interface across 9 backends
+with automatic fallback. Perfect for long-running scientific computations, AI
+agents, and any workflow that needs your attention — even while you sleep.
 
-Supported Backends
-------------------
+Backends
+--------
 
 .. list-table::
    :header-rows: 1
-   :widths: 20 20 15 15 30
+   :widths: 15 20 10 10 45
 
    * - Backend
      - Transport
@@ -23,43 +23,86 @@ Supported Backends
      - Internet
      - Notes
    * - **Audio**
-     - Local audio alert
+     - TTS to local speakers
      - Free
      - No
-     - Requires scitex-audio
-   * - **SMS (Twilio)**
-     - SMS text message
-     - Paid
-     - Required
-     - Requires Twilio account
+     - Via scitex-audio; SSH relay supported
+   * - **Desktop**
+     - ``notify-send`` / PowerShell
+     - Free
+     - No
+     - Linux / WSL
+   * - **Emacs**
+     - ``emacsclient`` popup
+     - Free
+     - No
+     - Popup, minibuffer, or alert
+   * - **Matplotlib**
+     - Visual popup window
+     - Free
+     - No
+     - Requires ``matplotlib``
+   * - **Playwright**
+     - Browser popup
+     - Free
+     - No
+     - Requires ``playwright``
    * - **Email**
-     - SMTP email
+     - SMTP
      - Free
      - Required
-     - Supports Gmail, SMTP relay
+     - Gmail, SMTP relay
    * - **Webhook**
      - HTTP POST
      - Free
      - Required
      - Slack, Discord, custom endpoints
+   * - **Telegram**
+     - Telegram Bot API
+     - Free
+     - Required
+     - No SDK dependency (urllib only)
+   * - **Twilio**
+     - Phone call / SMS
+     - Paid
+     - Required
+     - Twilio account needed; no SDK dependency
 
-Quick Example
--------------
+.. toctree::
+   :maxdepth: 2
+   :caption: User Guide
+
+   quickstart
+   backends
+   configuration
+   env_vars
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference
+
+   api/scitex_notification
+   api/backends
+   api/mcp
+
+Quick Examples
+--------------
 
 .. code-block:: python
 
-   import scitex_notification as notify
+   import scitex_notification as stxn
 
-   # Send via default backend
-   notify.send("Training complete. Val loss: 0.042")
+   # Simple alert — fallback: audio → emacs → matplotlib → playwright → email
+   stxn.alert("Training complete. Val loss: 0.042")
 
-   # Send via specific backend
-   notify.send("Job finished", backend="email")
+   # Specific backend
+   stxn.alert("Job finished", backend="email")
 
-   # Notify on function completion
-   @notify.on_complete(backend="audio")
-   def train_model():
-       ...  # long-running computation
+   # Escalate to phone call
+   stxn.call("Server is down — wake up!")
+
+   # Send SMS
+   stxn.sms("Build done!")
 
 Indices and tables
 ==================
