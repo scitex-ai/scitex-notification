@@ -43,9 +43,12 @@ _load_env()
 from ._backends import NotifyLevel as _AlertLevel
 from ._backends import available_backends as _available_backends
 from ._backends import get_backend as _get_backend
+from ._notify_legacy import notify, send_gmail
 
 try:
-    from importlib.metadata import version as _v, PackageNotFoundError
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version as _v
+
     try:
         __version__ = _v("scitex-notification")
     except PackageNotFoundError:
@@ -59,6 +62,8 @@ __all__ = [
     "available_backends",
     "call",
     "call_async",
+    "notify",
+    "send_gmail",
     "sms",
     "sms_async",
     "__version__",
