@@ -30,10 +30,16 @@ class AudioBackend(BaseNotifyBackend):
 
     def __init__(
         self,
-        backend: str = "gtts",
+        backend: Optional[str] = None,
         speed: float = 1.5,
         rate: int = 180,
     ):
+        # Default backend=None so scitex_audio's fallback chain decides
+        # (elevenlabs -> luxtts -> gtts -> pyttsx3, with the operator's
+        # SCITEX_AUDIO_DEFAULT_BACKEND honoured and a LOUD spoken notice on
+        # any degradation). The old hardcoded "gtts" default pinned every
+        # notification to the robotic Google voice (operator 2026-06-17).
+        # Pass an explicit backend to override.
         self.tts_backend = backend
         self.speed = speed
         self.rate = rate
