@@ -32,6 +32,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 autodoc_mock_imports = [
     "twilio",
+    "mcp",
     "fastmcp",
     "playwright",
     "scitex_audio",
