@@ -20,6 +20,7 @@ from ._notify_cmds import (  # noqa: F401
     call,
     list_backends,
     send_notification,
+    send_notification_alias,
     send_sms,
     show_config,
 )
@@ -88,7 +89,8 @@ def cli(ctx, help_recursive, as_json):
 
     \b
     Examples:
-      scitex-notification send-notification "Task complete!"
+      scitex-notification send "Task complete!"
+      scitex-notification send "Listen up" --backend audio
       scitex-notification call "Wake up!"
       scitex-notification call "Wake up!" --repeat 2
       scitex-notification list-backends
@@ -103,13 +105,17 @@ def cli(ctx, help_recursive, as_json):
             click.echo(ctx.get_help())
 
 
-# Register renamed sub-commands + hidden deprecation redirects
+# Register sub-commands.
+#   `send` is canonical (verb + required positional MESSAGE, per the
+#   noun-verb CLI convention — like `install <pkg>`). `send-notification` is
+#   kept as a hidden, fully-working back-compat alias so old scripts/agents
+#   keep firing. The other renames stay hard-error redirects.
 cli.add_command(send_notification)
+cli.add_command(send_notification_alias)
 cli.add_command(call)
 cli.add_command(send_sms)
 cli.add_command(list_backends)
 cli.add_command(show_config)
-cli.add_command(_deprecated_redirect("send", "send-notification"))
 cli.add_command(_deprecated_redirect("sms", "send-sms"))
 cli.add_command(_deprecated_redirect("backends", "list-backends"))
 cli.add_command(_deprecated_redirect("config", "show-config"))

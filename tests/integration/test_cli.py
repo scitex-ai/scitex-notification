@@ -473,4 +473,141 @@ def test_list_python_apis_json_contains_apis_key(runner):
     assert "apis" in data
 
 
+# ---------------------------------------------------------------------------
+# test_send_is_canonical  (send replaces send-notification as the verb leaf)
+# ---------------------------------------------------------------------------
+def test_send_canonical_command_dry_run_exits_zero(runner):
+    """The canonical `send <message>` command works (exit 0 on dry-run)."""
+    # Arrange
+    args = ["send", "Canonical send", "--dry-run"]
+
+    # Act
+    result = runner.invoke(cli, args)
+
+    # Assert
+    assert result.exit_code == 0
+
+
+def test_send_canonical_command_echoes_message(runner):
+    """`send` echoes the message body in dry-run output."""
+    # Arrange
+    args = ["send", "Canonical send", "--dry-run"]
+
+    # Act
+    result = runner.invoke(cli, args)
+
+    # Assert
+    assert "Canonical send" in result.output
+
+
+def test_send_listed_in_top_level_help(runner):
+    """`send` is advertised in the top-level command list (canonical leaf)."""
+    # Arrange
+    args = ["--help"]
+
+    # Act
+    result = runner.invoke(cli, args)
+
+    # Assert
+    assert "send" in result.output
+
+
+def test_send_notification_alias_still_works_dry_run(runner):
+    """The old `send-notification` name keeps working as a back-compat alias."""
+    # Arrange
+    args = ["send-notification", "Alias send", "--dry-run"]
+
+    # Act
+    result = runner.invoke(cli, args)
+
+    # Assert
+    assert result.exit_code == 0
+
+
+def test_send_notification_alias_echoes_message(runner):
+    """The alias produces the same dry-run echo as the canonical command."""
+    # Arrange
+    args = ["send-notification", "Alias send", "--dry-run"]
+
+    # Act
+    result = runner.invoke(cli, args)
+
+    # Assert
+    assert "Alias send" in result.output
+
+
+# ---------------------------------------------------------------------------
+# test_send_explicit_unavailable_backend_fails_loud  (no silent emacs fallback)
+# ---------------------------------------------------------------------------
+@pytest.fixture
+def unavailable_backend_send_result(runner):
+    """Run `send --backend email` with the email backend forced unavailable.
+
+    `email` is already a valid --backend choice, so we don't fight
+    ``click.Choice``: we just swap the registry's ``email`` entry for a real,
+    never-available backend for the duration of the test. That drives the
+    explicit-backend fail-loud path (exit 1 + clear message), proving the CLI
+    does NOT silently fall back to emacs. Restores the registry on teardown.
+    """
+    from datetime import datetime
+
+    from scitex_notification._backends import BACKENDS
+    from scitex_notification._backends._types import (
+        BaseNotifyBackend,
+        NotifyResult,
+    )
+
+    class _NeverAvailEmail(BaseNotifyBackend):
+        name = "email"
+
+        def is_available(self) -> bool:
+            return False
+
+        async def send(self, message, title=None, level=None, **kwargs):
+            return NotifyResult(
+                success=False,
+                backend=self.name,
+                message=message,
+                timestamp=datetime.now().isoformat(),
+                error="never",
+            )
+
+    backends_snapshot = dict(BACKENDS)
+    BACKENDS["email"] = _NeverAvailEmail
+    try:
+        result = runner.invoke(cli, ["send", "must fail loud", "--backend", "email"])
+        yield result
+    finally:
+        BACKENDS.clear()
+        BACKENDS.update(backends_snapshot)
+
+
+def test_send_explicit_unavailable_backend_exits_nonzero(
+    unavailable_backend_send_result,
+):
+    """Explicit unavailable backend exits non-zero (never a quiet emacs swap)."""
+    # Arrange
+    result = unavailable_backend_send_result
+
+    # Act
+    exit_code = result.exit_code
+
+    # Assert
+    assert exit_code != 0
+
+
+def test_send_explicit_unavailable_backend_reports_failure_text(
+    unavailable_backend_send_result,
+):
+    """The failure message is shown, not a misleading 'Notification sent'."""
+    # Arrange
+    result = unavailable_backend_send_result
+
+    # Act
+    says_failed = "Failed to send notification" in result.output
+
+    # Assert
+    assert says_failed is True
+
+
 # EOF

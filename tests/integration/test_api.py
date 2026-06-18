@@ -13,6 +13,75 @@ Covers:
 
 from __future__ import annotations
 
+from datetime import datetime
+
+import pytest
+
+from scitex_notification._backends import BACKENDS
+from scitex_notification._backends._types import BaseNotifyBackend, NotifyResult
+
+
+# ---------------------------------------------------------------------------
+# Real probe backends (no mocks): registered into the live BACKENDS registry
+# so the public alert()/call() dispatcher is exercised deterministically,
+# independent of which real channels happen to be configured on the host.
+# ---------------------------------------------------------------------------
+class _AvailableProbeBackend(BaseNotifyBackend):
+    """A real backend that is available and whose send() always succeeds."""
+
+    name = "api_probe_ok"
+
+    def is_available(self) -> bool:
+        return True
+
+    async def send(self, message, title=None, level=None, **kwargs) -> NotifyResult:
+        return NotifyResult(
+            success=True,
+            backend=self.name,
+            message=message,
+            timestamp=datetime.now().isoformat(),
+        )
+
+
+class _UnavailableProbeBackend(BaseNotifyBackend):
+    """A real backend that reports it is not available (is_available -> False)."""
+
+    name = "api_probe_unavailable"
+
+    def is_available(self) -> bool:
+        return False
+
+    async def send(self, message, title=None, level=None, **kwargs) -> NotifyResult:
+        raise AssertionError("send() must not run for an unavailable backend")
+
+
+@pytest.fixture
+def available_probe():
+    """Register an available probe backend; restore the registry on teardown."""
+    snapshot = dict(BACKENDS)
+    BACKENDS[_AvailableProbeBackend.name] = _AvailableProbeBackend
+    try:
+        yield _AvailableProbeBackend.name
+    finally:
+        BACKENDS.clear()
+        BACKENDS.update(snapshot)
+
+
+@pytest.fixture
+def twilio_unavailable():
+    """Pin the 'twilio' backend (used by call()) to an unavailable probe.
+
+    Makes call()'s fail-loud contract deterministic regardless of whether real
+    Twilio credentials are configured on the host running the suite.
+    """
+    snapshot = dict(BACKENDS)
+    BACKENDS["twilio"] = _UnavailableProbeBackend
+    try:
+        yield
+    finally:
+        BACKENDS.clear()
+        BACKENDS.update(snapshot)
+
 
 # ---------------------------------------------------------------------------
 # test_version_defined
@@ -166,16 +235,16 @@ def test_available_backends_returns_only_known_names():
 
 
 # ---------------------------------------------------------------------------
-# test_alert_returns_bool (real backend, no mock)
+# test_alert_returns_bool (real registered backend, no mock)
 # ---------------------------------------------------------------------------
-def test_alert_returns_bool_with_default_backend():
-    """alert() always returns a bool with the default backend selection."""
+def test_alert_returns_bool_with_available_backend(available_probe):
+    """alert() returns a bool when an explicit, available backend delivers."""
     # Arrange
     import scitex_notification
 
     # Act
     result = scitex_notification.alert(
-        "test message", backend="desktop", fallback=False
+        "test message", backend=available_probe, fallback=False
     )
 
     # Assert
@@ -183,16 +252,16 @@ def test_alert_returns_bool_with_default_backend():
 
 
 # ---------------------------------------------------------------------------
-# test_alert_with_invalid_level_falls_back_to_info
+# test_alert_with_invalid_level_is_coerced_not_raised
 # ---------------------------------------------------------------------------
-def test_alert_with_invalid_level_returns_bool():
-    """alert() should not raise on an invalid level string."""
+def test_alert_with_invalid_level_returns_bool(available_probe):
+    """alert() coerces an invalid level to info and does not raise on it."""
     # Arrange
     import scitex_notification
 
     # Act
     result = scitex_notification.alert(
-        "hi", level="not_a_real_level", backend="desktop", fallback=False
+        "hi", level="not_a_real_level", backend=available_probe, fallback=False
     )
 
     # Assert
@@ -200,18 +269,27 @@ def test_alert_with_invalid_level_returns_bool():
 
 
 # ---------------------------------------------------------------------------
-# test_call_returns_bool
+# test_call_fails_loud_when_twilio_unavailable
 # ---------------------------------------------------------------------------
-def test_call_returns_a_bool_value():
-    """call() always returns a bool."""
+def test_call_raises_when_twilio_unavailable(twilio_unavailable):
+    """call() fails loud (ValueError) when its twilio backend is unavailable.
+
+    call() pins backend='twilio', fallback=False, so an unavailable twilio must
+    raise rather than silently returning False (no-silent-fallbacks policy).
+    """
     # Arrange
     import scitex_notification
 
+    raised: ValueError | None = None
+
     # Act
-    result = scitex_notification.call("test")
+    try:
+        scitex_notification.call("test")
+    except ValueError as exc:
+        raised = exc
 
     # Assert
-    assert isinstance(result, bool)
+    assert raised is not None
 
 
 def test_sms_returns_a_bool_value():

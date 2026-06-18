@@ -89,7 +89,7 @@ async def alert_async(
     title: Optional[str] = None,
     backend: Optional[Union[str, list[str]]] = None,
     level: str = "info",
-    fallback: bool = True,
+    fallback: Optional[bool] = None,
     **kwargs,
 ) -> bool:
     """Send alert asynchronously.
@@ -101,22 +101,41 @@ async def alert_async(
     title : str, optional
         Alert title
     backend : str or list[str], optional
-        Backend(s) to use. If None, uses default with fallback.
+        Backend(s) to use. If None, walks the default fallback priority order.
+        If a single backend name is given, ONLY that backend is used (no
+        silent substitution) unless ``fallback=True`` is passed explicitly.
     level : str
         Alert level: info, warning, error, critical
-    fallback : bool
-        If True and backend fails, try next in priority order.
-        Default True when backend=None, False when backend specified.
+    fallback : bool, optional
+        Controls whether other backends are tried after the requested one(s).
+        If left as ``None`` (default), it resolves to ``backend is None`` —
+        i.e. an EXPLICIT backend request fails loud rather than silently
+        falling through to another channel (no-silent-fallbacks policy). Pass
+        ``True`` to opt back into fallback for an explicit backend, or
+        ``False`` to forbid it even when ``backend is None``.
 
     Returns
     -------
     bool
-        True if any backend succeeded
+        True if the requested backend(s) delivered the alert.
+
+    Raises
+    ------
+    ValueError
+        If a single explicit backend is requested with fallback disabled and
+        that backend is not currently available — the caller asked for a
+        specific channel that cannot fire, so we fail loud instead of
+        returning a quiet ``False`` that looks like a transient send failure.
     """
     try:
         lvl = _AlertLevel(level.lower())
     except ValueError:
         lvl = _AlertLevel.INFO
+
+    # Resolve the fallback default: an explicit backend must not silently
+    # substitute. Only auto-fall-through when no backend was named.
+    if fallback is None:
+        fallback = backend is None
 
     # Determine backends to try
     if backend is None:
@@ -128,7 +147,8 @@ async def alert_async(
         else:
             backends = [default]
     else:
-        # Backend specified: use it (with optional fallback)
+        # Backend specified: use exactly it. Append fallbacks ONLY if the
+        # caller explicitly opted in via fallback=True.
         backends = [backend] if isinstance(backend, str) else list(backend)
         if fallback and len(backends) == 1:
             # Add fallback backends after the specified one
@@ -136,8 +156,21 @@ async def alert_async(
                 b for b in DEFAULT_FALLBACK_ORDER if b not in backends
             ]
 
-    # Try backends until one succeeds
+    # Fail loud: a single explicit backend with no fallback that isn't
+    # available is a request we cannot honour. Don't pretend it was a normal
+    # send failure (which the caller might retry) — say what's wrong.
     available = _available_backends()
+    explicit_single = backend is not None and not fallback and len(backends) == 1
+    if explicit_single and backends[0] not in available:
+        raise ValueError(
+            f"Notification backend {backends[0]!r} was requested but is not "
+            f"available. Available backends: {available or '(none)'}. "
+            f"Install/configure it, or omit --backend to use the fallback "
+            f"chain."
+        )
+
+    # Try backends until one succeeds.
+    last_error: Optional[str] = None
     for name in backends:
         if name not in available:
             continue
@@ -146,8 +179,15 @@ async def alert_async(
             result = await b.send(message, title=title, level=lvl, **kwargs)
             if result.success:
                 return True
-        except Exception:
-            pass
+            last_error = result.error or last_error
+        except Exception as e:
+            last_error = str(e)
+
+    # Fail loud for the explicit single-backend case: the one channel the
+    # caller demanded tried and failed — surface its error rather than a
+    # silent False.
+    if explicit_single and last_error:
+        raise RuntimeError(f"Notification backend {backends[0]!r} failed: {last_error}")
 
     return False
 
@@ -157,7 +197,7 @@ def alert(
     title: Optional[str] = None,
     backend: Optional[Union[str, list[str]]] = None,
     level: str = "info",
-    fallback: bool = True,
+    fallback: Optional[bool] = None,
     **kwargs,
 ) -> bool:
     """Send alert synchronously.
@@ -169,16 +209,26 @@ def alert(
     title : str, optional
         Alert title
     backend : str or list[str], optional
-        Backend(s) to use. If None, uses fallback priority order.
+        Backend(s) to use. If None, walks the fallback priority order. A
+        single explicit backend is used on its own (no silent substitution)
+        unless ``fallback=True`` is passed.
     level : str
         Alert level: info, warning, error, critical
-    fallback : bool
-        If True and backend fails, try next in priority order.
+    fallback : bool, optional
+        If None (default) resolves to ``backend is None`` — an explicit
+        backend never silently falls back. See :func:`alert_async`.
 
     Returns
     -------
     bool
-        True if any backend succeeded
+        True if the requested backend(s) delivered the alert.
+
+    Raises
+    ------
+    ValueError / RuntimeError
+        When a single explicit backend (fallback disabled) is unavailable or
+        fails — see :func:`alert_async`. The fallback path (``backend=None``)
+        still returns ``False`` on total failure.
 
     Fallback Order
     --------------

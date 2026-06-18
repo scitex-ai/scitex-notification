@@ -26,46 +26,83 @@ _BACKEND_CHOICES = [
 _LEVEL_CHOICES = ["info", "warning", "error", "critical"]
 
 
-@click.command("send-notification")
-@click.argument("message")
-@click.option("--title", "-t", help="Notification title")
-@click.option(
-    "--backend",
-    "-b",
-    type=click.Choice(_BACKEND_CHOICES),
-    help="Backend to use (auto-selects with fallback if not specified)",
-)
-@click.option(
-    "--level",
-    "-l",
-    type=click.Choice(_LEVEL_CHOICES),
-    default="info",
-    help="Alert level (default: info)",
-)
-@click.option("--no-fallback", is_flag=True, help="Disable backend fallback on error")
-@click.option(
-    "--dry-run", is_flag=True, help="Print what would be sent without sending"
-)
-@click.option(
-    "-y", "--yes", is_flag=True, help="Suppress interactive confirmation (assume yes)."
-)
-@click.option("--json", "as_json", is_flag=True, help="Output as structured JSON.")
-def send_notification(
-    message, title, backend, level, no_fallback, dry_run, yes, as_json
-):
-    """
-    Send a notification via configured backends
+def _send_options(func):
+    """Shared option stack for the `send` command + its alias."""
+    decorators = [
+        click.argument("message"),
+        click.option("--title", "-t", help="Notification title"),
+        click.option(
+            "--backend",
+            "-b",
+            type=click.Choice(_BACKEND_CHOICES),
+            help=(
+                "Backend to use. When given, ONLY that backend is used — it "
+                "never silently substitutes another (e.g. emacs). Omit to "
+                "walk the fallback chain (audio -> emacs -> ...)."
+            ),
+        ),
+        click.option(
+            "--level",
+            "-l",
+            type=click.Choice(_LEVEL_CHOICES),
+            default="info",
+            help="Alert level (default: info)",
+        ),
+        click.option(
+            "--no-fallback",
+            is_flag=True,
+            help=(
+                "Forbid trying any other backend. With an explicit --backend "
+                "this is already the default; use it to also pin a bare (no "
+                "--backend) send to the single default backend."
+            ),
+        ),
+        click.option(
+            "--fallback",
+            "force_fallback",
+            is_flag=True,
+            help=(
+                "Opt an explicit --backend INTO the fallback chain (try other "
+                "backends if the requested one fails). Off by default for "
+                "explicit backends."
+            ),
+        ),
+        click.option(
+            "--dry-run",
+            is_flag=True,
+            help="Print what would be sent without sending",
+        ),
+        click.option(
+            "-y",
+            "--yes",
+            is_flag=True,
+            help="Suppress interactive confirmation (assume yes).",
+        ),
+        click.option(
+            "--json", "as_json", is_flag=True, help="Output as structured JSON."
+        ),
+    ]
+    for dec in reversed(decorators):
+        func = dec(func)
+    return func
 
-    \b
-    Examples:
-      scitex-notification send-notification "Task complete!"
-      scitex-notification send-notification "Error" --backend email --level error
-      scitex-notification send-notification "Hello" --json
-    """
+
+def _send_impl(
+    message, title, backend, level, no_fallback, force_fallback, dry_run, yes, as_json
+):
+    # Resolve fallback intent:
+    #   --no-fallback     -> False (forbid any substitution)
+    #   --fallback        -> True  (explicit backend may fall through)
+    #   neither (default) -> None  (api default: explicit => no fallback,
+    #                                bare => walk the chain)
+    if no_fallback and force_fallback:
+        fatal("--no-fallback and --fallback are mutually exclusive")
+    fallback = False if no_fallback else (True if force_fallback else None)
+
     if dry_run:
         click.echo(
             f"[dry-run] send: message={message!r} title={title!r} "
-            f"backend={backend!r} level={level!r} fallback={not no_fallback}"
+            f"backend={backend!r} level={level!r} fallback={fallback}"
         )
         return
 
@@ -81,7 +118,7 @@ def send_notification(
             title=title,
             backend=backend,
             level=level,
-            fallback=not no_fallback,
+            fallback=fallback,
         )
         return
 
@@ -93,15 +130,73 @@ def send_notification(
             title=title,
             backend=backend,
             level=level,
-            fallback=not no_fallback,
+            fallback=fallback,
         )
         if success:
             click.secho("Notification sent", fg="green")
         else:
             click.secho("Failed to send notification (all backends failed)", fg="red")
             sys.exit(1)
+    except (ValueError, RuntimeError) as e:
+        # Explicit-backend failures (unavailable / send failed) land here.
+        # Fail loud with the reason and exit non-zero — never a silent
+        # fallback, never an opaque traceback.
+        click.secho(f"Failed to send notification: {e}", fg="red")
+        sys.exit(1)
     except Exception as e:
         fatal(str(e))
+
+
+@click.command("send")
+@_send_options
+def send_notification(
+    message, title, backend, level, no_fallback, force_fallback, dry_run, yes, as_json
+):
+    """
+    Send a notification via configured backends
+
+    \b
+    An explicit --backend is honoured exactly: it plays/sends on that channel
+    or fails LOUD (clear error, exit 1). It is never silently swapped for
+    another backend. Omit --backend to walk the fallback chain.
+
+    \b
+    Examples:
+      scitex-notification send "Task complete!"
+      scitex-notification send "Listen up" --backend audio
+      scitex-notification send "Error" --backend email --level error
+      scitex-notification send "Hello" --json
+    """
+    _send_impl(
+        message,
+        title,
+        backend,
+        level,
+        no_fallback,
+        force_fallback,
+        dry_run,
+        yes,
+        as_json,
+    )
+
+
+@click.command("send-notification", hidden=True)
+@_send_options
+def send_notification_alias(
+    message, title, backend, level, no_fallback, force_fallback, dry_run, yes, as_json
+):
+    """Back-compat alias for `send` (the canonical name)."""
+    _send_impl(
+        message,
+        title,
+        backend,
+        level,
+        no_fallback,
+        force_fallback,
+        dry_run,
+        yes,
+        as_json,
+    )
 
 
 @click.command()
