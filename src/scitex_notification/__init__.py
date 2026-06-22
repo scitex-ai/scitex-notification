@@ -43,6 +43,7 @@ _load_env()
 from ._backends import NotifyLevel as _AlertLevel
 from ._backends import available_backends as _available_backends
 from ._backends import get_backend as _get_backend
+from ._backends import send_email
 from ._notify_legacy import notify, send_gmail
 
 try:
@@ -63,6 +64,7 @@ __all__ = [
     "call",
     "call_async",
     "notify",
+    "send_email",
     "send_gmail",
     "sms",
     "sms_async",

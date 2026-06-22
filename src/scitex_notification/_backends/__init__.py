@@ -9,7 +9,7 @@ from __future__ import annotations
 from ._audio import AudioBackend
 from ._desktop import DesktopBackend
 from ._emacs import EmacsBackend
-from ._email import EmailBackend
+from ._email import EmailBackend, send_email
 from ._matplotlib import MatplotlibBackend
 from ._playwright import PlaywrightBackend
 from ._telegram import TelegramBackend
@@ -23,6 +23,7 @@ __all__ = [
     "BaseNotifyBackend",
     "AudioBackend",
     "EmailBackend",
+    "send_email",
     "DesktopBackend",
     "EmacsBackend",
     "WebhookBackend",
