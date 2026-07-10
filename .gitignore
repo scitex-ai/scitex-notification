@@ -673,3 +673,4 @@ slurm_logs
 !examples/*_out/FINISHED_SUCCESS/**
 !examples/*_out/FINISHED_SUCCESS/**/202?Y-*
 !examples/*_out/FINISHED_SUCCESS/**/202?Y-*/**
+/.worktrees/
