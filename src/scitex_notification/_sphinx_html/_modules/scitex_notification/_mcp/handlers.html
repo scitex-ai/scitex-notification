@@ -1,0 +1,429 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scitex_notification._mcp.handlers &mdash; scitex-notification 0.2.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=b01fafc3"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            scitex-notification
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../backends.html">Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../env_vars.html">Environment Variables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/scitex_notification.html">scitex_notification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/backends.html">Backends API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/mcp.html">MCP Server</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">scitex-notification</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../scitex_notification.html">scitex_notification</a></li>
+      <li class="breadcrumb-item active">scitex_notification._mcp.handlers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scitex_notification._mcp.handlers</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># Timestamp: &quot;2026-03-16 (ywatanabe)&quot;</span>
+<span class="c1"># File: /home/ywatanabe/proj/scitex-notification/src/scitex_notification/_mcp/handlers.py</span>
+
+<span class="sd">&quot;&quot;&quot;MCP handlers for scitex-notification server.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;notify_handler&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;notify_by_level_handler&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;list_backends_handler&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;available_backends_handler&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;get_config_handler&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;skills_list_handler&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;skills_get_handler&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="notify_handler">
+<a class="viewcode-back" href="../../../api/mcp.html#scitex_notification._mcp.notify_handler">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">notify_handler</span><span class="p">(</span>
+    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">title</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;info&quot;</span><span class="p">,</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">backends</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Send notification via specified backend(s).&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.._backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">BACKENDS</span><span class="p">,</span> <span class="n">NotifyLevel</span><span class="p">,</span> <span class="n">get_backend</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.._backends._config</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_config</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Determine notification level</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">notify_level</span> <span class="o">=</span> <span class="n">NotifyLevel</span><span class="p">(</span><span class="n">level</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">notify_level</span> <span class="o">=</span> <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">INFO</span>
+
+        <span class="c1"># Determine backends to use</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">backends</span><span class="p">:</span>
+            <span class="n">backend_list</span> <span class="o">=</span> <span class="n">backends</span>
+        <span class="k">elif</span> <span class="n">backend</span><span class="p">:</span>
+            <span class="n">backend_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">backend</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">backend_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">default_backend</span><span class="p">]</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">success_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">backend_name</span> <span class="ow">in</span> <span class="n">backend_list</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">backend_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">BACKENDS</span><span class="p">:</span>
+                    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;backend&quot;</span><span class="p">:</span> <span class="n">backend_name</span><span class="p">,</span>
+                            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Unknown backend: </span><span class="si">{</span><span class="n">backend_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="n">b</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">(</span><span class="n">backend_name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">b</span><span class="o">.</span><span class="n">send</span><span class="p">(</span>
+                    <span class="n">message</span><span class="p">,</span>
+                    <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
+                    <span class="n">level</span><span class="o">=</span><span class="n">notify_level</span><span class="p">,</span>
+                    <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;backend&quot;</span><span class="p">:</span> <span class="n">backend_name</span><span class="p">,</span>
+                        <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">,</span>
+                        <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">error</span><span class="p">,</span>
+                        <span class="s2">&quot;details&quot;</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">details</span><span class="p">,</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+                    <span class="n">success_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;backend&quot;</span><span class="p">:</span> <span class="n">backend_name</span><span class="p">,</span>
+                        <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                        <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="n">success_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">message</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">title</span><span class="p">,</span>
+            <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="n">level</span><span class="p">,</span>
+            <span class="s2">&quot;backends_used&quot;</span><span class="p">:</span> <span class="n">backend_list</span><span class="p">,</span>
+            <span class="s2">&quot;results&quot;</span><span class="p">:</span> <span class="n">results</span><span class="p">,</span>
+            <span class="s2">&quot;success_count&quot;</span><span class="p">:</span> <span class="n">success_count</span><span class="p">,</span>
+            <span class="s2">&quot;total_count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">backend_list</span><span class="p">),</span>
+            <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="p">}</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="p">}</span></div>
+
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">notify_by_level_handler</span><span class="p">(</span>
+    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">title</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;info&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Send notification using backends configured for the level.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.._backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">NotifyLevel</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.._backends._config</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_config</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Determine notification level</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">notify_level</span> <span class="o">=</span> <span class="n">NotifyLevel</span><span class="p">(</span><span class="n">level</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">notify_level</span> <span class="o">=</span> <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">INFO</span>
+
+        <span class="c1"># Get backends configured for this level</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">()</span>
+        <span class="n">backend_list</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_available_backends_for_level</span><span class="p">(</span><span class="n">notify_level</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">backend_list</span><span class="p">:</span>
+            <span class="n">backend_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">default_backend</span><span class="p">]</span>
+
+        <span class="c1"># Use notify_handler with determined backends</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="n">notify_handler</span><span class="p">(</span>
+            <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
+            <span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">,</span>
+            <span class="n">backends</span><span class="o">=</span><span class="n">backend_list</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="p">}</span>
+
+
+<div class="viewcode-block" id="list_backends_handler">
+<a class="viewcode-back" href="../../../api/mcp.html#scitex_notification._mcp.list_backends_handler">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_backends_handler</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;List all notification backends with their status.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.._backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">BACKENDS</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.._backends._config</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_backend_available</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">backends_info</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="n">BACKENDS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">backend</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+                <span class="n">is_available</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span>
+                <span class="n">pkg_available</span> <span class="o">=</span> <span class="n">is_backend_available</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+                <span class="n">backends_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+                        <span class="s2">&quot;available&quot;</span><span class="p">:</span> <span class="n">is_available</span><span class="p">,</span>
+                        <span class="s2">&quot;package_available&quot;</span><span class="p">:</span> <span class="n">pkg_available</span><span class="p">,</span>
+                        <span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">backends_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+                        <span class="s2">&quot;available&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                        <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;backends&quot;</span><span class="p">:</span> <span class="n">backends_info</span><span class="p">,</span>
+            <span class="s2">&quot;total_count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">backends_info</span><span class="p">),</span>
+            <span class="s2">&quot;available_count&quot;</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">backends_info</span> <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;available&quot;</span><span class="p">)),</span>
+            <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="p">}</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="available_backends_handler">
+<a class="viewcode-back" href="../../../api/mcp.html#scitex_notification._mcp.available_backends_handler">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">available_backends_handler</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get list of currently available backends.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.._backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">available_backends</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">available</span> <span class="o">=</span> <span class="n">available_backends</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;available_backends&quot;</span><span class="p">:</span> <span class="n">available</span><span class="p">,</span>
+            <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">available</span><span class="p">),</span>
+            <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="p">}</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="get_config_handler">
+<a class="viewcode-back" href="../../../api/mcp.html#scitex_notification._mcp.get_config_handler">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_config_handler</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get current notification configuration.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.._backends._config</span><span class="w"> </span><span class="kn">import</span> <span class="n">UIConfig</span><span class="p">,</span> <span class="n">get_config</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Reset to get fresh config</span>
+        <span class="n">UIConfig</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;default_backend&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">default_backend</span><span class="p">,</span>
+                <span class="s2">&quot;backend_priority&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">backend_priority</span><span class="p">,</span>
+                <span class="s2">&quot;available_priority&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">get_available_backend_priority</span><span class="p">(),</span>
+                <span class="s2">&quot;first_available&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">get_first_available_backend</span><span class="p">(),</span>
+                <span class="s2">&quot;level_backends&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;level_backends&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="p">[]),</span>
+                    <span class="s2">&quot;warning&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;level_backends&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                        <span class="s2">&quot;warning&quot;</span><span class="p">,</span> <span class="p">[]</span>
+                    <span class="p">),</span>
+                    <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;level_backends&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="p">[]),</span>
+                    <span class="s2">&quot;critical&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;level_backends&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                        <span class="s2">&quot;critical&quot;</span><span class="p">,</span> <span class="p">[]</span>
+                    <span class="p">),</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;timeouts&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;timeouts&quot;</span><span class="p">,</span> <span class="p">{}),</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="p">}</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="p">}</span></div>
+
+
+
+<span class="c1"># §5 — skills introspection handlers (per audit-mcp-tools convention)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">skills_list_handler</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;List the names of every skill page shipped by scitex-notification.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">skills_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;_skills&quot;</span> <span class="o">/</span> <span class="s2">&quot;scitex-notification&quot;</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">stem</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">skills_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.md&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;SKILL.md&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;package&quot;</span><span class="p">:</span> <span class="s2">&quot;scitex-notification&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;skills&quot;</span><span class="p">:</span> <span class="n">names</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)}</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">skills_get_handler</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fetch the full Markdown content of one scitex-notification skill page.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">skills_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;_skills&quot;</span> <span class="o">/</span> <span class="s2">&quot;scitex-notification&quot;</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">skills_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.md&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">target</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">available</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">stem</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">skills_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.md&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;SKILL.md&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;unknown skill </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">; available: </span><span class="si">{</span><span class="n">available</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;package&quot;</span><span class="p">:</span> <span class="s2">&quot;scitex-notification&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+            <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">target</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span>
+        <span class="p">}</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)}</span>
+
+
+<span class="c1"># EOF</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Yusuke Watanabe.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

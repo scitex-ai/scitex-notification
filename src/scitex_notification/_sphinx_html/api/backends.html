@@ -1,0 +1,539 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Backends API &mdash; scitex-notification 0.2.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=b01fafc3"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="MCP Server" href="mcp.html" />
+    <link rel="prev" title="scitex_notification" href="scitex_notification.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            scitex-notification
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../backends.html">Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../env_vars.html">Environment Variables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="scitex_notification.html">scitex_notification</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Backends API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_notification._backends.AudioBackend"><code class="docutils literal notranslate"><span class="pre">AudioBackend</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.AudioBackend.is_available"><code class="docutils literal notranslate"><span class="pre">AudioBackend.is_available()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.AudioBackend.name"><code class="docutils literal notranslate"><span class="pre">AudioBackend.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.AudioBackend.send"><code class="docutils literal notranslate"><span class="pre">AudioBackend.send()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_notification._backends.BaseNotifyBackend"><code class="docutils literal notranslate"><span class="pre">BaseNotifyBackend</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.BaseNotifyBackend.is_available"><code class="docutils literal notranslate"><span class="pre">BaseNotifyBackend.is_available()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.BaseNotifyBackend.name"><code class="docutils literal notranslate"><span class="pre">BaseNotifyBackend.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.BaseNotifyBackend.send"><code class="docutils literal notranslate"><span class="pre">BaseNotifyBackend.send()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_notification._backends.DesktopBackend"><code class="docutils literal notranslate"><span class="pre">DesktopBackend</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.DesktopBackend.is_available"><code class="docutils literal notranslate"><span class="pre">DesktopBackend.is_available()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.DesktopBackend.name"><code class="docutils literal notranslate"><span class="pre">DesktopBackend.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.DesktopBackend.send"><code class="docutils literal notranslate"><span class="pre">DesktopBackend.send()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_notification._backends.EmacsBackend"><code class="docutils literal notranslate"><span class="pre">EmacsBackend</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.EmacsBackend.__init__"><code class="docutils literal notranslate"><span class="pre">EmacsBackend.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.EmacsBackend.is_available"><code class="docutils literal notranslate"><span class="pre">EmacsBackend.is_available()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.EmacsBackend.name"><code class="docutils literal notranslate"><span class="pre">EmacsBackend.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.EmacsBackend.send"><code class="docutils literal notranslate"><span class="pre">EmacsBackend.send()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_notification._backends.EmailBackend"><code class="docutils literal notranslate"><span class="pre">EmailBackend</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.EmailBackend.is_available"><code class="docutils literal notranslate"><span class="pre">EmailBackend.is_available()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.EmailBackend.name"><code class="docutils literal notranslate"><span class="pre">EmailBackend.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.EmailBackend.send"><code class="docutils literal notranslate"><span class="pre">EmailBackend.send()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_notification._backends.MatplotlibBackend"><code class="docutils literal notranslate"><span class="pre">MatplotlibBackend</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.MatplotlibBackend.is_available"><code class="docutils literal notranslate"><span class="pre">MatplotlibBackend.is_available()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.MatplotlibBackend.name"><code class="docutils literal notranslate"><span class="pre">MatplotlibBackend.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.MatplotlibBackend.send"><code class="docutils literal notranslate"><span class="pre">MatplotlibBackend.send()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_notification._backends.NotifyLevel"><code class="docutils literal notranslate"><span class="pre">NotifyLevel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.NotifyLevel.CRITICAL"><code class="docutils literal notranslate"><span class="pre">NotifyLevel.CRITICAL</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.NotifyLevel.ERROR"><code class="docutils literal notranslate"><span class="pre">NotifyLevel.ERROR</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.NotifyLevel.INFO"><code class="docutils literal notranslate"><span class="pre">NotifyLevel.INFO</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.NotifyLevel.WARNING"><code class="docutils literal notranslate"><span class="pre">NotifyLevel.WARNING</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_notification._backends.NotifyResult"><code class="docutils literal notranslate"><span class="pre">NotifyResult</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.NotifyResult.backend"><code class="docutils literal notranslate"><span class="pre">NotifyResult.backend</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.NotifyResult.details"><code class="docutils literal notranslate"><span class="pre">NotifyResult.details</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.NotifyResult.error"><code class="docutils literal notranslate"><span class="pre">NotifyResult.error</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.NotifyResult.message"><code class="docutils literal notranslate"><span class="pre">NotifyResult.message</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.NotifyResult.success"><code class="docutils literal notranslate"><span class="pre">NotifyResult.success</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.NotifyResult.timestamp"><code class="docutils literal notranslate"><span class="pre">NotifyResult.timestamp</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_notification._backends.PlaywrightBackend"><code class="docutils literal notranslate"><span class="pre">PlaywrightBackend</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.PlaywrightBackend.is_available"><code class="docutils literal notranslate"><span class="pre">PlaywrightBackend.is_available()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.PlaywrightBackend.name"><code class="docutils literal notranslate"><span class="pre">PlaywrightBackend.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.PlaywrightBackend.send"><code class="docutils literal notranslate"><span class="pre">PlaywrightBackend.send()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_notification._backends.TelegramBackend"><code class="docutils literal notranslate"><span class="pre">TelegramBackend</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.TelegramBackend.is_available"><code class="docutils literal notranslate"><span class="pre">TelegramBackend.is_available()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.TelegramBackend.name"><code class="docutils literal notranslate"><span class="pre">TelegramBackend.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.TelegramBackend.send"><code class="docutils literal notranslate"><span class="pre">TelegramBackend.send()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_notification._backends.TwilioBackend"><code class="docutils literal notranslate"><span class="pre">TwilioBackend</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.TwilioBackend.is_available"><code class="docutils literal notranslate"><span class="pre">TwilioBackend.is_available()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.TwilioBackend.name"><code class="docutils literal notranslate"><span class="pre">TwilioBackend.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.TwilioBackend.send"><code class="docutils literal notranslate"><span class="pre">TwilioBackend.send()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_notification._backends.WebhookBackend"><code class="docutils literal notranslate"><span class="pre">WebhookBackend</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.WebhookBackend.is_available"><code class="docutils literal notranslate"><span class="pre">WebhookBackend.is_available()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.WebhookBackend.name"><code class="docutils literal notranslate"><span class="pre">WebhookBackend.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scitex_notification._backends.WebhookBackend.send"><code class="docutils literal notranslate"><span class="pre">WebhookBackend.send()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_notification._backends.available_backends"><code class="docutils literal notranslate"><span class="pre">available_backends()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scitex_notification._backends.get_backend"><code class="docutils literal notranslate"><span class="pre">get_backend()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">MCP Server</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">scitex-notification</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Backends API</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/ywatanabe1989/scitex-notification/blob/main/docs/sphinx/api/backends.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-scitex_notification._backends">
+<span id="backends-api"></span><h1>Backends API<a class="headerlink" href="#module-scitex_notification._backends" title="Link to this heading"></a></h1>
+<p>Notification backend registry and utilities.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="scitex_notification._backends.AudioBackend">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">scitex_notification._backends.</span></span><span class="sig-name descname"><span class="pre">AudioBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">180</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_notification/_backends/_audio.html#AudioBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.AudioBackend" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#scitex_notification._backends.BaseNotifyBackend" title="scitex_notification._backends._types.BaseNotifyBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseNotifyBackend</span></code></a></p>
+<p>Audio notification via scitex_audio TTS.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.AudioBackend.is_available">
+<span class="sig-name descname"><span class="pre">is_available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_audio.html#AudioBackend.is_available"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.AudioBackend.is_available" title="Link to this definition"></a></dt>
+<dd><p>Check if this backend is available.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.AudioBackend.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'audio'</span></span><a class="headerlink" href="#scitex_notification._backends.AudioBackend.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.AudioBackend.send">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scitex_notification._backends.NotifyLevel" title="scitex_notification._backends._types.NotifyLevel"><span class="pre">NotifyLevel</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NotifyLevel.INFO</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#scitex_notification._backends.NotifyResult" title="scitex_notification._backends._types.NotifyResult"><span class="pre">NotifyResult</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_audio.html#AudioBackend.send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.AudioBackend.send" title="Link to this definition"></a></dt>
+<dd><p>Send a notification.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scitex_notification._backends.BaseNotifyBackend">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">scitex_notification._backends.</span></span><span class="sig-name descname"><span class="pre">BaseNotifyBackend</span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_types.html#BaseNotifyBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.BaseNotifyBackend" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<p>Base class for notification backends.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.BaseNotifyBackend.is_available">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_types.html#BaseNotifyBackend.is_available"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.BaseNotifyBackend.is_available" title="Link to this definition"></a></dt>
+<dd><p>Check if this backend is available.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.BaseNotifyBackend.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'base'</span></span><a class="headerlink" href="#scitex_notification._backends.BaseNotifyBackend.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.BaseNotifyBackend.send">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scitex_notification._backends.NotifyLevel" title="scitex_notification._backends._types.NotifyLevel"><span class="pre">NotifyLevel</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NotifyLevel.INFO</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#scitex_notification._backends.NotifyResult" title="scitex_notification._backends._types.NotifyResult"><span class="pre">NotifyResult</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_types.html#BaseNotifyBackend.send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.BaseNotifyBackend.send" title="Link to this definition"></a></dt>
+<dd><p>Send a notification.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scitex_notification._backends.DesktopBackend">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">scitex_notification._backends.</span></span><span class="sig-name descname"><span class="pre">DesktopBackend</span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_desktop.html#DesktopBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.DesktopBackend" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#scitex_notification._backends.BaseNotifyBackend" title="scitex_notification._backends._types.BaseNotifyBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseNotifyBackend</span></code></a></p>
+<p>Desktop notification via native OS APIs.</p>
+<p>Supports:
+- Linux: notify-send
+- WSL/Windows: PowerShell toast notifications</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.DesktopBackend.is_available">
+<span class="sig-name descname"><span class="pre">is_available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_desktop.html#DesktopBackend.is_available"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.DesktopBackend.is_available" title="Link to this definition"></a></dt>
+<dd><p>Check if this backend is available.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.DesktopBackend.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'desktop'</span></span><a class="headerlink" href="#scitex_notification._backends.DesktopBackend.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.DesktopBackend.send">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scitex_notification._backends.NotifyLevel" title="scitex_notification._backends._types.NotifyLevel"><span class="pre">NotifyLevel</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NotifyLevel.INFO</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#scitex_notification._backends.NotifyResult" title="scitex_notification._backends._types.NotifyResult"><span class="pre">NotifyResult</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_desktop.html#DesktopBackend.send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.DesktopBackend.send" title="Link to this definition"></a></dt>
+<dd><p>Send a notification.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scitex_notification._backends.EmacsBackend">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">scitex_notification._backends.</span></span><span class="sig-name descname"><span class="pre">EmacsBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'popup'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_notification/_backends/_emacs.html#EmacsBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.EmacsBackend" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#scitex_notification._backends.BaseNotifyBackend" title="scitex_notification._backends._types.BaseNotifyBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseNotifyBackend</span></code></a></p>
+<p>Notification via Emacs using emacsclient.</p>
+<p>Displays notifications in Emacs minibuffer or as alerts.
+Supports different display methods:
+- popup: temporary popup buffer (default, most noticeable)
+- minibuffer: message function
+- alert: alert.el package
+- notifications: notifications.el (desktop notifications from Emacs)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.EmacsBackend.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'popup'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_notification/_backends/_emacs.html#EmacsBackend.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.EmacsBackend.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize Emacs backend.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Notification method: ‘popup’, ‘minibuffer’, ‘alert’, or ‘notifications’</p></li>
+<li><p><strong>timeout</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>) – Display timeout for visual methods</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.EmacsBackend.is_available">
+<span class="sig-name descname"><span class="pre">is_available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_emacs.html#EmacsBackend.is_available"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.EmacsBackend.is_available" title="Link to this definition"></a></dt>
+<dd><p>Check if emacsclient is available.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.EmacsBackend.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'emacs'</span></span><a class="headerlink" href="#scitex_notification._backends.EmacsBackend.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.EmacsBackend.send">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scitex_notification._backends.NotifyLevel" title="scitex_notification._backends._types.NotifyLevel"><span class="pre">NotifyLevel</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NotifyLevel.INFO</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#scitex_notification._backends.NotifyResult" title="scitex_notification._backends._types.NotifyResult"><span class="pre">NotifyResult</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_emacs.html#EmacsBackend.send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.EmacsBackend.send" title="Link to this definition"></a></dt>
+<dd><p>Send notification via Emacs.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scitex_notification._backends.EmailBackend">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">scitex_notification._backends.</span></span><span class="sig-name descname"><span class="pre">EmailBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">recipient</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sender</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_notification/_backends/_email.html#EmailBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.EmailBackend" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#scitex_notification._backends.BaseNotifyBackend" title="scitex_notification._backends._types.BaseNotifyBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseNotifyBackend</span></code></a></p>
+<p>Email notification via SMTP (stdlib smtplib).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.EmailBackend.is_available">
+<span class="sig-name descname"><span class="pre">is_available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_email.html#EmailBackend.is_available"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.EmailBackend.is_available" title="Link to this definition"></a></dt>
+<dd><p>Check if this backend is available.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.EmailBackend.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'email'</span></span><a class="headerlink" href="#scitex_notification._backends.EmailBackend.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.EmailBackend.send">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scitex_notification._backends.NotifyLevel" title="scitex_notification._backends._types.NotifyLevel"><span class="pre">NotifyLevel</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NotifyLevel.INFO</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#scitex_notification._backends.NotifyResult" title="scitex_notification._backends._types.NotifyResult"><span class="pre">NotifyResult</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_email.html#EmailBackend.send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.EmailBackend.send" title="Link to this definition"></a></dt>
+<dd><p>Send a notification.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scitex_notification._backends.MatplotlibBackend">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">scitex_notification._backends.</span></span><span class="sig-name descname"><span class="pre">MatplotlibBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_notification/_backends/_matplotlib.html#MatplotlibBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.MatplotlibBackend" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#scitex_notification._backends.BaseNotifyBackend" title="scitex_notification._backends._types.BaseNotifyBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseNotifyBackend</span></code></a></p>
+<p>Visual notification via matplotlib popup window.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.MatplotlibBackend.is_available">
+<span class="sig-name descname"><span class="pre">is_available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_matplotlib.html#MatplotlibBackend.is_available"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.MatplotlibBackend.is_available" title="Link to this definition"></a></dt>
+<dd><p>Check if this backend is available.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.MatplotlibBackend.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'matplotlib'</span></span><a class="headerlink" href="#scitex_notification._backends.MatplotlibBackend.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.MatplotlibBackend.send">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scitex_notification._backends.NotifyLevel" title="scitex_notification._backends._types.NotifyLevel"><span class="pre">NotifyLevel</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NotifyLevel.INFO</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#scitex_notification._backends.NotifyResult" title="scitex_notification._backends._types.NotifyResult"><span class="pre">NotifyResult</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_matplotlib.html#MatplotlibBackend.send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.MatplotlibBackend.send" title="Link to this definition"></a></dt>
+<dd><p>Send a notification.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scitex_notification._backends.NotifyLevel">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">scitex_notification._backends.</span></span><span class="sig-name descname"><span class="pre">NotifyLevel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_notification/_backends/_types.html#NotifyLevel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.NotifyLevel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
+<p>Notification urgency levels.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.NotifyLevel.CRITICAL">
+<span class="sig-name descname"><span class="pre">CRITICAL</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'critical'</span></span><a class="headerlink" href="#scitex_notification._backends.NotifyLevel.CRITICAL" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.NotifyLevel.ERROR">
+<span class="sig-name descname"><span class="pre">ERROR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'error'</span></span><a class="headerlink" href="#scitex_notification._backends.NotifyLevel.ERROR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.NotifyLevel.INFO">
+<span class="sig-name descname"><span class="pre">INFO</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'info'</span></span><a class="headerlink" href="#scitex_notification._backends.NotifyLevel.INFO" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.NotifyLevel.WARNING">
+<span class="sig-name descname"><span class="pre">WARNING</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'warning'</span></span><a class="headerlink" href="#scitex_notification._backends.NotifyLevel.WARNING" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scitex_notification._backends.NotifyResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">scitex_notification._backends.</span></span><span class="sig-name descname"><span class="pre">NotifyResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">success</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">details</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_notification/_backends/_types.html#NotifyResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.NotifyResult" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Result of a notification attempt.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.NotifyResult.backend">
+<span class="sig-name descname"><span class="pre">backend</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#scitex_notification._backends.NotifyResult.backend" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.NotifyResult.details">
+<span class="sig-name descname"><span class="pre">details</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#scitex_notification._backends.NotifyResult.details" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.NotifyResult.error">
+<span class="sig-name descname"><span class="pre">error</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#scitex_notification._backends.NotifyResult.error" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.NotifyResult.message">
+<span class="sig-name descname"><span class="pre">message</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#scitex_notification._backends.NotifyResult.message" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.NotifyResult.success">
+<span class="sig-name descname"><span class="pre">success</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#scitex_notification._backends.NotifyResult.success" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.NotifyResult.timestamp">
+<span class="sig-name descname"><span class="pre">timestamp</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#scitex_notification._backends.NotifyResult.timestamp" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scitex_notification._backends.PlaywrightBackend">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">scitex_notification._backends.</span></span><span class="sig-name descname"><span class="pre">PlaywrightBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_notification/_backends/_playwright.html#PlaywrightBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.PlaywrightBackend" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#scitex_notification._backends.BaseNotifyBackend" title="scitex_notification._backends._types.BaseNotifyBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseNotifyBackend</span></code></a></p>
+<p>Browser notification via Playwright.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.PlaywrightBackend.is_available">
+<span class="sig-name descname"><span class="pre">is_available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_playwright.html#PlaywrightBackend.is_available"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.PlaywrightBackend.is_available" title="Link to this definition"></a></dt>
+<dd><p>Check if this backend is available.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.PlaywrightBackend.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'playwright'</span></span><a class="headerlink" href="#scitex_notification._backends.PlaywrightBackend.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.PlaywrightBackend.send">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scitex_notification._backends.NotifyLevel" title="scitex_notification._backends._types.NotifyLevel"><span class="pre">NotifyLevel</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NotifyLevel.INFO</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#scitex_notification._backends.NotifyResult" title="scitex_notification._backends._types.NotifyResult"><span class="pre">NotifyResult</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_playwright.html#PlaywrightBackend.send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.PlaywrightBackend.send" title="Link to this definition"></a></dt>
+<dd><p>Send a notification.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scitex_notification._backends.TelegramBackend">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">scitex_notification._backends.</span></span><span class="sig-name descname"><span class="pre">TelegramBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bot_token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chat_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_notification/_backends/_telegram.html#TelegramBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.TelegramBackend" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#scitex_notification._backends.BaseNotifyBackend" title="scitex_notification._backends._types.BaseNotifyBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseNotifyBackend</span></code></a></p>
+<p>Telegram message notification backend.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.TelegramBackend.is_available">
+<span class="sig-name descname"><span class="pre">is_available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_telegram.html#TelegramBackend.is_available"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.TelegramBackend.is_available" title="Link to this definition"></a></dt>
+<dd><p>Check if this backend is available.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.TelegramBackend.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'telegram'</span></span><a class="headerlink" href="#scitex_notification._backends.TelegramBackend.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.TelegramBackend.send">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scitex_notification._backends.NotifyLevel" title="scitex_notification._backends._types.NotifyLevel"><span class="pre">NotifyLevel</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NotifyLevel.INFO</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#scitex_notification._backends.NotifyResult" title="scitex_notification._backends._types.NotifyResult"><span class="pre">NotifyResult</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_telegram.html#TelegramBackend.send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.TelegramBackend.send" title="Link to this definition"></a></dt>
+<dd><p>Send a notification.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scitex_notification._backends.TwilioBackend">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">scitex_notification._backends.</span></span><span class="sig-name descname"><span class="pre">TwilioBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account_sid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auth_token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flow_sid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_notification/_backends/_twilio.html#TwilioBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.TwilioBackend" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#scitex_notification._backends.BaseNotifyBackend" title="scitex_notification._backends._types.BaseNotifyBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseNotifyBackend</span></code></a></p>
+<p>Phone call notification via Twilio.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.TwilioBackend.is_available">
+<span class="sig-name descname"><span class="pre">is_available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_twilio.html#TwilioBackend.is_available"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.TwilioBackend.is_available" title="Link to this definition"></a></dt>
+<dd><p>Check if this backend is available.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.TwilioBackend.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'twilio'</span></span><a class="headerlink" href="#scitex_notification._backends.TwilioBackend.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.TwilioBackend.send">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scitex_notification._backends.NotifyLevel" title="scitex_notification._backends._types.NotifyLevel"><span class="pre">NotifyLevel</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NotifyLevel.INFO</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#scitex_notification._backends.NotifyResult" title="scitex_notification._backends._types.NotifyResult"><span class="pre">NotifyResult</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_twilio.html#TwilioBackend.send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.TwilioBackend.send" title="Link to this definition"></a></dt>
+<dd><p>Send a notification.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="scitex_notification._backends.WebhookBackend">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">scitex_notification._backends.</span></span><span class="sig-name descname"><span class="pre">WebhookBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/scitex_notification/_backends/_webhook.html#WebhookBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.WebhookBackend" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#scitex_notification._backends.BaseNotifyBackend" title="scitex_notification._backends._types.BaseNotifyBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseNotifyBackend</span></code></a></p>
+<p>Webhook notification for Slack, Discord, etc.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.WebhookBackend.is_available">
+<span class="sig-name descname"><span class="pre">is_available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_webhook.html#WebhookBackend.is_available"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.WebhookBackend.is_available" title="Link to this definition"></a></dt>
+<dd><p>Check if this backend is available.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="scitex_notification._backends.WebhookBackend.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'webhook'</span></span><a class="headerlink" href="#scitex_notification._backends.WebhookBackend.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scitex_notification._backends.WebhookBackend.send">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#scitex_notification._backends.NotifyLevel" title="scitex_notification._backends._types.NotifyLevel"><span class="pre">NotifyLevel</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NotifyLevel.INFO</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#scitex_notification._backends.NotifyResult" title="scitex_notification._backends._types.NotifyResult"><span class="pre">NotifyResult</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends/_webhook.html#WebhookBackend.send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.WebhookBackend.send" title="Link to this definition"></a></dt>
+<dd><p>Send a notification.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_notification._backends.available_backends">
+<span class="sig-prename descclassname"><span class="pre">scitex_notification._backends.</span></span><span class="sig-name descname"><span class="pre">available_backends</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends.html#available_backends"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.available_backends" title="Link to this definition"></a></dt>
+<dd><p>Return list of available notification backends.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scitex_notification._backends.get_backend">
+<span class="sig-prename descclassname"><span class="pre">scitex_notification._backends.</span></span><span class="sig-name descname"><span class="pre">get_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#scitex_notification._backends.BaseNotifyBackend" title="scitex_notification._backends._types.BaseNotifyBackend"><span class="pre">BaseNotifyBackend</span></a></span></span><a class="reference internal" href="../_modules/scitex_notification/_backends.html#get_backend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_notification._backends.get_backend" title="Link to this definition"></a></dt>
+<dd><p>Get a notification backend by name.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="scitex_notification.html" class="btn btn-neutral float-left" title="scitex_notification" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mcp.html" class="btn btn-neutral float-right" title="MCP Server" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Yusuke Watanabe.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

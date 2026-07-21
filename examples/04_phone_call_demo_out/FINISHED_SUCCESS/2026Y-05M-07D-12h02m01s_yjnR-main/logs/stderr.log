@@ -1,0 +1,2 @@
+WARN: Twilio not configured. Set SCITEX_NOTIFICATION_TWILIO_* env vars.
+INFO: See .env.example for the full list.

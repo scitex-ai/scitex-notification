@@ -105,6 +105,39 @@ def _send_email(
         server.send_message(msg)
 
 
+def send_email(
+    to: str,
+    subject: str,
+    body: str,
+    *,
+    from_addr: Optional[str] = None,
+    password: Optional[str] = None,
+    smtp_host: Optional[str] = None,
+    smtp_port: Optional[int] = None,
+) -> None:
+    """Send a plain-text email synchronously with explicit credentials.
+
+    Public, side-channel-free wrapper over :func:`_send_email`. Unlike the
+    env-driven :class:`EmailBackend` (which resolves ``from``/``password``
+    from *independent* fallback chains and so can pair a sender from one
+    identity with a password from another), every field here is passed in
+    by the caller — the caller owns the coherent identity. Each argument
+    left ``None`` still falls back to the ``SCITEX_NOTIFICATION_EMAIL_*``
+    env chain documented on :func:`_send_email`.
+
+    Raises any ``smtplib`` error on failure (fail-loud — no silent ``False``).
+    """
+    _send_email(
+        to=to,
+        subject=subject,
+        body=body,
+        from_addr=from_addr,
+        password=password,
+        smtp_host=smtp_host,
+        smtp_port=smtp_port,
+    )
+
+
 class EmailBackend(BaseNotifyBackend):
     """Email notification via SMTP (stdlib smtplib)."""
 

@@ -105,27 +105,45 @@ def mcp_doctor():
 )
 @click.pass_context
 def mcp_installation_deprecated(ctx):
-    """(deprecated) Renamed to `show-installation`."""
+    """(deprecated) Renamed to `install`."""
     click.echo(
         "error: `scitex-notification mcp installation` was renamed to "
-        "`scitex-notification mcp show-installation`.\n"
-        "Re-run with: scitex-notification mcp show-installation",
+        "`scitex-notification mcp install`.\n"
+        "Re-run with: scitex-notification mcp install",
         err=True,
     )
     ctx.exit(2)
 
 
-@mcp.command("show-installation")
+@mcp.command(
+    "show-installation", hidden=True, context_settings={"ignore_unknown_options": True}
+)
+@click.pass_context
+def mcp_show_installation_deprecated(ctx):
+    """(deprecated) Renamed to `install`."""
+    click.echo(
+        "error: `scitex-notification mcp show-installation` was renamed to "
+        "`scitex-notification mcp install`.\n"
+        "Re-run with: scitex-notification mcp install",
+        err=True,
+    )
+    ctx.exit(2)
+
+
+@mcp.command("install")
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON.")
-def mcp_show_installation(as_json):
+@click.option("--dry-run", is_flag=True, help="Accepted for §2; this verb is informational, never mutates state.")
+@click.option("--yes", "-y", is_flag=True, help="Accepted for §2; this verb is informational, never mutates state.")
+def mcp_install(as_json, dry_run, yes):
     """
     Show MCP server installation instructions
 
     \b
     Example:
-      scitex-notification mcp show-installation
-      scitex-notification mcp show-installation --json
+      scitex-notification mcp install
+      scitex-notification mcp install --json
     """
+    del dry_run, yes  # audit §2 — no-op flags
     config = {
         "mcpServers": {
             "scitex-notification": {

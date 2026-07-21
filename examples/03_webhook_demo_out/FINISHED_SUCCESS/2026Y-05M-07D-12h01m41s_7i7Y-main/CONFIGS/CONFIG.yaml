@@ -1,0 +1,11 @@
+ID: 2026Y-05M-07D-12h01m41s_7i7Y
+PID: 350730
+START_DATETIME: 2026-05-07 12:01:41.979399
+FILE: /home/ywatanabe/proj/scitex-notification/examples/03_webhook_demo.py
+SDIR_OUT: /home/ywatanabe/proj/scitex-notification/examples/03_webhook_demo_out
+SDIR_RUN: 
+    /home/ywatanabe/proj/scitex-notification/examples/03_webhook_demo_out/RUNNING/2026Y-05M-07D-12h01m41s_7i7Y-main
+ARGS: {}
+EXIT_STATUS: 0
+END_DATETIME: 2026-05-07 12:01:46.592589
+RUN_DURATION: 00:00:04

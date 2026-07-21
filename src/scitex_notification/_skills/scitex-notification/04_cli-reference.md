@@ -1,7 +1,8 @@
 ---
-description: scitex-notification CLI commands — send, call, sms, backends, config, mcp, and telegram-channel subcommands with all options.
-name: cli-reference
-tags: [scitex-notification, scitex-package]
+description: |
+  [TOPIC] Cli Reference
+  [DETAILS] scitex-notification CLI commands — send-notification, call, send-sms, list-backends, show-config, mcp, and telegram-channel subcommands with all options.
+tags: [scitex-notification-cli-reference]
 ---
 
 # CLI Reference
@@ -16,12 +17,12 @@ Global options:
 - `--help-recursive` — print help for all subcommands
 - `--json` — output as structured JSON
 
-## send
+## send-notification
 
 Send a notification via configured backends.
 
 ```bash
-scitex-notification send MESSAGE [OPTIONS]
+scitex-notification send-notification MESSAGE [OPTIONS]
 ```
 
 | Option | Short | Default | Description |
@@ -34,10 +35,10 @@ scitex-notification send MESSAGE [OPTIONS]
 | `--json` | — | off | Output as structured JSON |
 
 ```bash
-scitex-notification send "Task complete!"
-scitex-notification send "Error in step 3" --backend email --level error
-scitex-notification send "Hello" --title "CI Alert" --no-fallback --json
-scitex-notification send "Test" --dry-run
+scitex-notification send-notification "Task complete!"
+scitex-notification send-notification "Error in step 3" --backend email --level error
+scitex-notification send-notification "Hello" --title "CI Alert" --no-fallback --json
+scitex-notification send-notification "Test" --dry-run
 ```
 
 ## call
@@ -73,12 +74,12 @@ export SCITEX_NOTIFICATION_TWILIO_FROM=+15550001111
 export SCITEX_NOTIFICATION_TWILIO_TO=+81900000000
 ```
 
-## sms
+## send-sms
 
 Send an SMS via Twilio. Requires `SCITEX_NOTIFICATION_TWILIO_*` env vars.
 
 ```bash
-scitex-notification sms MESSAGE [OPTIONS]
+scitex-notification send-sms MESSAGE [OPTIONS]
 ```
 
 | Option | Short | Default | Description |
@@ -89,51 +90,52 @@ scitex-notification sms MESSAGE [OPTIONS]
 | `--json` | — | off | Output as structured JSON |
 
 ```bash
-scitex-notification sms "Build finished!"
-scitex-notification sms "Alert!" --to +61400000000
-scitex-notification sms "Test" --title "CI" --dry-run
+scitex-notification send-sms "Build finished!"
+scitex-notification send-sms "Alert!" --to +61400000000
+scitex-notification send-sms "Test" --title "CI" --dry-run
 ```
 
-## backends
+## list-backends
 
 List all notification backends and their availability.
 
 ```bash
-scitex-notification backends [--json]
+scitex-notification list-backends [--json]
 ```
 
 Output shows fallback-order backends with `available`/`not available` status, plus explicit-only backends (`twilio`, `telegram`).
 
 ```bash
-scitex-notification backends
-scitex-notification backends --json
+scitex-notification list-backends
+scitex-notification list-backends --json
 # JSON: {"available": [...], "all_backends": [...], "fallback_order": [...]}
 ```
 
-## config
+## show-config
 
 Show current notification configuration.
 
 ```bash
-scitex-notification config [--json]
+scitex-notification show-config [--json]
 ```
 
 Displays: default backend, priority order, first available backend.
 
 ```bash
-scitex-notification config
-scitex-notification config --json
+scitex-notification show-config
+scitex-notification show-config --json
 # JSON: {"default_backend": "audio", "backend_priority": [...], ...}
 ```
 
 ## mcp
 
-MCP server management subgroup.
+MCP (Model Context Protocol) server management subgroup.
 
 ```bash
-scitex-notification mcp start    # Start the MCP server
-scitex-notification mcp stop     # Stop the MCP server
-scitex-notification mcp status   # Show server status
+scitex-notification mcp start              # Start the MCP stdio server
+scitex-notification mcp doctor             # Check MCP server health and dependencies
+scitex-notification mcp list-tools         # List available MCP tools
+scitex-notification mcp show-installation  # Show MCP server installation instructions
 ```
 
 ## telegram-channel

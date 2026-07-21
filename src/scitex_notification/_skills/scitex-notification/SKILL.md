@@ -1,8 +1,18 @@
 ---
 name: scitex-notification
-description: One-call alerting across 9 backends — audio TTS (spoken notification), desktop popup, emacs minibuffer, matplotlib banner, playwright browser toast, email (SMTP), webhook (HTTP POST), Telegram message, and Twilio phone call / SMS — with automatic fallback (default order: audio → emacs → matplotlib → playwright → email) and level-based routing (info / warning / error / critical can trigger different backend sets). Drop-in replacement for ad-hoc `smtplib.sendmail`, `requests.post(slack_webhook, ...)`, `plyer.notification.notify`, `twilio.rest.Client().calls.create`, `python-telegram-bot`, and hand-rolled "print + beep + email" patterns. Use whenever the user asks to "notify me when this finishes", "alert me if training fails", "send me an email when done", "call my phone if the server goes down", "text me the result", "push a Telegram message", "beep when the job completes", "escalate to phone call on critical errors", "ping Slack / webhook", or is wiring up notifications from scripts, pipelines, or AI agents.
+description: |
+  [WHAT] One-call alerting across 9 backends — audio TTS (spoken notification), desktop popup, emacs minibuffer, matplotlib banner, playwright browser toast, email (SMTP), webhook (HTTP POST), Telegram message, and Twilio phone call / SMS — with automatic fallback (default order: audio → emacs → matplotlib → playwright → email) and level-based routing (info / warning / error / critical can trigger…
+  [WHEN] Use whenever the user asks to "notify me when this finishes", "alert me if training fails", "send me an email when done", "call my phone if the server goes down", "text me the result", "push a Telegram message", "beep when the job completes", "escalate to phone call on critical errors", "ping Slack / webhook", or is wiring up notifications from scripts, pipelines, or AI agents.
+  [HOW] See sub-skills index for entry points.
+tags: [scitex-notification]
 allowed-tools: mcp__scitex__notification_*
-tags: [scitex-notification, scitex-package]
+primary_interface: cli
+interfaces:
+  python: 0
+  cli: 0
+  mcp: 0
+  skills: 0
+  http: 0
 ---
 
 # scitex-notification
@@ -11,11 +21,20 @@ Multi-backend alerting with automatic fallback. One `alert()` covers local and r
 
 ## Sub-skills
 
-* [01_python-api](01_python-api.md) — `alert()`, `call()`, `sms()` signatures, backends table, env vars
-* [02_mcp-tools](02_mcp-tools.md) — MCP tool schemas: `notify`, `notify_by_level`, `list_notification_backends`
-* [03_configuration](03_configuration.md) — YAML config, `UIConfig`, level-based routing
-* [04_cli-reference](04_cli-reference.md) — CLI commands: `send`, `call`, `sms`, `backends`, `config`
-* [05_backends](05_backends.md) — Per-backend setup, env vars, availability checks
+### Mandatory leaves
+* [01_installation](01_installation.md) — pip install + extras + smoke verify
+* [02_quick-start](02_quick-start.md) — `alert()` with default fallback + Twilio
+* [03_python-api](03_python-api.md) — top-level Python surface
+* [04_cli-reference](04_cli-reference.md) — `scitex-notification` subcommand summary
+
+### Reference
+* [05_backends](05_backends.md) — per-backend setup, env vars, availability checks
+* [06_python-api](06_python-api.md) — `alert()`, `call()`, `sms()` signatures, backends table (legacy detail)
+* [07_mcp-tools](07_mcp-tools.md) — MCP tool schemas
+* [08_configuration](08_configuration.md) — YAML config, `UIConfig`, level-based routing
+
+### Environment
+* [20_env-vars](20_env-vars.md) — `SCITEX_NOTIFICATION_*` env vars
 
 ## Quick Start
 
@@ -41,12 +60,12 @@ stxn.sms("Build finished successfully")
 ## CLI
 
 ```bash
-scitex-notification send "Task done!"
+scitex-notification send-notification "Task done!"
 scitex-notification call "Wake up!" --repeat 2
-scitex-notification sms "Build complete"
-scitex-notification backends          # List available backends
-scitex-notification config            # Show configuration
-scitex-notification mcp start         # Start MCP server
+scitex-notification send-sms "Build complete"
+scitex-notification list-backends     # List available backends
+scitex-notification show-config       # Show configuration
+scitex-notification mcp start         # Start MCP stdio server
 ```
 
 ## MCP Tools

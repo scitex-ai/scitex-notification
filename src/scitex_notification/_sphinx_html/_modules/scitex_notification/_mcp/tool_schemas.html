@@ -1,0 +1,295 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scitex_notification._mcp.tool_schemas &mdash; scitex-notification 0.2.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=b01fafc3"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            scitex-notification
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../backends.html">Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../env_vars.html">Environment Variables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/scitex_notification.html">scitex_notification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/backends.html">Backends API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/mcp.html">MCP Server</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">scitex-notification</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../scitex_notification.html">scitex_notification</a></li>
+      <li class="breadcrumb-item active">scitex_notification._mcp.tool_schemas</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scitex_notification._mcp.tool_schemas</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># Timestamp: &quot;2026-03-16 (ywatanabe)&quot;</span>
+<span class="c1"># File: /home/ywatanabe/proj/scitex-notification/src/scitex_notification/_mcp/tool_schemas.py</span>
+
+<span class="sd">&quot;&quot;&quot;Tool schemas for the scitex-notification MCP server.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">types</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;get_tool_schemas&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="get_tool_schemas">
+<a class="viewcode-back" href="../../../api/mcp.html#scitex_notification._mcp.get_tool_schemas">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_tool_schemas</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">types</span><span class="o">.</span><span class="n">Tool</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return all tool schemas for the notification MCP server.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">types</span><span class="o">.</span><span class="n">Tool</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;notify&quot;</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">&quot;Send an alert through any of 9 backends — `audio` (spoken TTS), &quot;</span>
+                <span class="s2">&quot;`desktop` (OS popup), `emacs` (minibuffer), `matplotlib` (banner), &quot;</span>
+                <span class="s2">&quot;`playwright` (browser toast), `email` (SMTP), `webhook` (HTTP &quot;</span>
+                <span class="s2">&quot;POST), `telegram`, `twilio` (phone call / SMS) — with automatic &quot;</span>
+                <span class="s2">&quot;fallback if a backend fails. Drop-in replacement for `smtplib`, &quot;</span>
+                <span class="s2">&quot;`plyer.notification`, `requests.post(slack_webhook)`, &quot;</span>
+                <span class="s2">&quot;`python-telegram-bot`. Use whenever the user asks to &#39;notify me&#39;, &quot;</span>
+                <span class="s2">&quot;&#39;alert me when this finishes&#39;, &#39;beep when done&#39;, &#39;email me the &quot;</span>
+                <span class="s2">&quot;result&#39;, &#39;ping me on Telegram&#39;, &#39;send a desktop notification&#39;, or &quot;</span>
+                <span class="s2">&quot;is wiring up monitoring from scripts / CI / AI agents. Pass &quot;</span>
+                <span class="s2">&quot;`backend=&#39;email&#39;` for a specific channel, or `backends=[&#39;audio&#39;, &quot;</span>
+                <span class="s2">&quot;&#39;email&#39;]` for multi-channel. `level` sets urgency (info / warning &quot;</span>
+                <span class="s2">&quot;/ error / critical).&quot;</span>
+            <span class="p">),</span>
+            <span class="n">inputSchema</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;The notification message to send&quot;</span><span class="p">,</span>
+                    <span class="p">},</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Optional notification title&quot;</span><span class="p">,</span>
+                    <span class="p">},</span>
+                    <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Notification urgency level&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;enum&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="s2">&quot;critical&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;info&quot;</span><span class="p">,</span>
+                    <span class="p">},</span>
+                    <span class="s2">&quot;backend&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="p">(</span>
+                            <span class="s2">&quot;Backend to use (audio, desktop, email, matplotlib, &quot;</span>
+                            <span class="s2">&quot;playwright, webhook). If not specified, uses default from config.&quot;</span>
+                        <span class="p">),</span>
+                    <span class="p">},</span>
+                    <span class="s2">&quot;backends&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">},</span>
+                        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Multiple backends to use simultaneously&quot;</span><span class="p">,</span>
+                    <span class="p">},</span>
+                    <span class="s2">&quot;timeout&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Timeout for visual backends (matplotlib, playwright)&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span>
+                    <span class="p">},</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">],</span>
+            <span class="p">},</span>
+        <span class="p">),</span>
+        <span class="n">types</span><span class="o">.</span><span class="n">Tool</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;notify_by_level&quot;</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">&quot;Route a notification through whichever backend set the user has &quot;</span>
+                <span class="s2">&quot;pre-configured for that urgency level — e.g. `info` → just emacs, &quot;</span>
+                <span class="s2">&quot;`critical` → audio + desktop + email + Twilio phone call. Lets &quot;</span>
+                <span class="s2">&quot;callers just say &#39;this is critical&#39; and let the config decide how &quot;</span>
+                <span class="s2">&quot;loudly to shout. Use whenever the user asks to &#39;alert at error &quot;</span>
+                <span class="s2">&quot;level&#39;, &#39;escalate to critical&#39;, &#39;send a warning through my usual &quot;</span>
+                <span class="s2">&quot;channels&#39;, or has set up `level_backends` in their scitex-&quot;</span>
+                <span class="s2">&quot;notification config.&quot;</span>
+            <span class="p">),</span>
+            <span class="n">inputSchema</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;The notification message to send&quot;</span><span class="p">,</span>
+                    <span class="p">},</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Optional notification title&quot;</span><span class="p">,</span>
+                    <span class="p">},</span>
+                    <span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Notification level (determines which backends to use)&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;enum&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="s2">&quot;critical&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;info&quot;</span><span class="p">,</span>
+                    <span class="p">},</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">],</span>
+            <span class="p">},</span>
+        <span class="p">),</span>
+        <span class="n">types</span><span class="o">.</span><span class="n">Tool</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;list_notification_backends&quot;</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">&quot;Enumerate every registered notification backend (audio, desktop, &quot;</span>
+                <span class="s2">&quot;emacs, matplotlib, playwright, email, webhook, telegram, twilio) &quot;</span>
+                <span class="s2">&quot;along with its reachability status — dependencies installed, env &quot;</span>
+                <span class="s2">&quot;vars set, connections healthy. Use when the user asks &#39;which &quot;</span>
+                <span class="s2">&quot;notifiers are set up?&#39;, &#39;why isn&#39;t my Twilio alert working?&#39;, &quot;</span>
+                <span class="s2">&quot;&#39;is email configured?&#39;, or is debugging a silent notification.&quot;</span>
+            <span class="p">),</span>
+            <span class="n">inputSchema</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span> <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{}},</span>
+        <span class="p">),</span>
+        <span class="n">types</span><span class="o">.</span><span class="n">Tool</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;available_notification_backends&quot;</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">&quot;List only the backends that are currently *working* — &quot;</span>
+                <span class="s2">&quot;dependencies imported cleanly and credentials / env vars / &quot;</span>
+                <span class="s2">&quot;sockets are intact. Shorter than `list_notification_backends` &quot;</span>
+                <span class="s2">&quot;and the right check before picking a fallback order at runtime. &quot;</span>
+                <span class="s2">&quot;Use when the user asks &#39;what notifiers actually work right &quot;</span>
+                <span class="s2">&quot;now?&#39;, &#39;which backends are live?&#39;, or before programmatically &quot;</span>
+                <span class="s2">&quot;choosing one.&quot;</span>
+            <span class="p">),</span>
+            <span class="n">inputSchema</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span> <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{}},</span>
+        <span class="p">),</span>
+        <span class="n">types</span><span class="o">.</span><span class="n">Tool</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;get_notification_config&quot;</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">&quot;Dump the active notification config — fallback order, per-&quot;</span>
+                <span class="s2">&quot;level backend mapping (info/warning/error/critical → which &quot;</span>
+                <span class="s2">&quot;backends), per-backend timeouts, Twilio/Telegram/webhook/email &quot;</span>
+                <span class="s2">&quot;credentials (with secrets redacted). Use when the user asks &quot;</span>
+                <span class="s2">&quot;&#39;show my notification config&#39;, &#39;what&#39;s my fallback order?&#39;, &quot;</span>
+                <span class="s2">&quot;&#39;which backends fire for critical?&#39;, or is auditing before &quot;</span>
+                <span class="s2">&quot;editing `~/.scitex/notification/config.yaml`.&quot;</span>
+            <span class="p">),</span>
+            <span class="n">inputSchema</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span> <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{}},</span>
+        <span class="p">),</span>
+        <span class="c1"># §5 — skills introspection tools (per audit-mcp-tools convention)</span>
+        <span class="n">types</span><span class="o">.</span><span class="n">Tool</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;notification_skills_list&quot;</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">&quot;List the names of every skill page shipped by scitex-&quot;</span>
+                <span class="s2">&quot;notification. Use whenever the user wants to discover what &quot;</span>
+                <span class="s2">&quot;detailed docs exist (backends, configuration, CLI reference, &quot;</span>
+                <span class="s2">&quot;MCP tools, Python API) before drilling into a specific topic. &quot;</span>
+                <span class="s2">&quot;Returns a JSON envelope with `skills: [...]`.&quot;</span>
+            <span class="p">),</span>
+            <span class="n">inputSchema</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span> <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{}},</span>
+        <span class="p">),</span>
+        <span class="n">types</span><span class="o">.</span><span class="n">Tool</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;notification_skills_get&quot;</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">&quot;Fetch the full Markdown content of one scitex-notification &quot;</span>
+                <span class="s2">&quot;skill page. Use after `notification_skills_list` to read an &quot;</span>
+                <span class="s2">&quot;individual guide (e.g. `backends`, `configuration`, `cli-&quot;</span>
+                <span class="s2">&quot;reference`, `mcp-tools`, `python-api`). Returns a JSON &quot;</span>
+                <span class="s2">&quot;envelope with `content: &lt;markdown&gt;` or an error envelope &quot;</span>
+                <span class="s2">&quot;listing available names.&quot;</span>
+            <span class="p">),</span>
+            <span class="n">inputSchema</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="p">(</span>
+                            <span class="s2">&quot;Skill page name without `.md`, e.g. `backends`.&quot;</span>
+                        <span class="p">),</span>
+                    <span class="p">}</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+            <span class="p">},</span>
+        <span class="p">),</span>
+    <span class="p">]</span></div>
+
+
+
+<span class="c1"># EOF</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Yusuke Watanabe.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

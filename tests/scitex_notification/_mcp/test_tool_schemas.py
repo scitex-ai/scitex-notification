@@ -3,6 +3,10 @@
 
 import pytest
 
+# `tool_schemas` imports `mcp.types` at module level; skip cleanly on
+# installs without the [mcp] extra.
+pytest.importorskip("mcp")
+
 from scitex_notification._mcp import tool_schemas
 
 
@@ -25,19 +29,58 @@ def _get_schemas():
 
 
 class TestToolSchemas:
-    def test_returns_nonempty_list(self):
+    def test_returns_a_list_type(self):
+        # Arrange
+        # (helper does the work)
+        # Act
         schemas = _get_schemas()
+
+        # Assert
         assert isinstance(schemas, list)
+
+    def test_returns_non_empty_list_of_schemas(self):
+        # Arrange
+        # (helper does the work)
+        # Act
+        schemas = _get_schemas()
+
+        # Assert
         assert len(schemas) > 0
 
-    def test_every_tool_has_name_and_description(self):
-        for s in _get_schemas():
-            assert s["name"] and isinstance(s["name"], str)
-            assert s["description"] and isinstance(s["description"], str)
+    def test_every_tool_has_a_name_string(self):
+        # Arrange
+        schemas = _get_schemas()
 
-    def test_names_are_unique(self):
-        names = [s["name"] for s in _get_schemas()]
-        assert len(names) == len(set(names))
+        # Act
+        invalid = [s for s in schemas if not (s["name"] and isinstance(s["name"], str))]
+
+        # Assert
+        assert invalid == []
+
+    def test_every_tool_has_a_description_string(self):
+        # Arrange
+        schemas = _get_schemas()
+
+        # Act
+        invalid = [
+            s
+            for s in schemas
+            if not (s["description"] and isinstance(s["description"], str))
+        ]
+
+        # Assert
+        assert invalid == []
+
+    def test_tool_names_are_unique_across_schemas(self):
+        # Arrange
+        schemas = _get_schemas()
+
+        # Act
+        names = [s["name"] for s in schemas]
+        unique_count = len(set(names))
+
+        # Assert
+        assert len(names) == unique_count
 
 
 if __name__ == "__main__":

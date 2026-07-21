@@ -1,0 +1,482 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scitex_notification._notify_legacy &mdash; scitex-notification 0.2.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=b01fafc3"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            scitex-notification
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../backends.html">Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../env_vars.html">Environment Variables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/scitex_notification.html">scitex_notification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/backends.html">Backends API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/mcp.html">MCP Server</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">scitex-notification</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../scitex_notification.html">scitex_notification</a></li>
+      <li class="breadcrumb-item active">scitex_notification._notify_legacy</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scitex_notification._notify_legacy</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># Timestamp: &quot;2026-05-30 (ywatanabe)&quot;</span>
+<span class="c1"># File: /home/ywatanabe/proj/scitex-notification/src/scitex_notification/_notify_legacy.py</span>
+
+<span class="sd">&quot;&quot;&quot;Legacy ``notify`` / ``send_gmail`` helpers migrated from the scitex umbrella.</span>
+
+<span class="sd">These functions provide the richer, script-aware email notification API that</span>
+<span class="sd">used to live in ``scitex.utils._notify`` / ``scitex.utils._email``:</span>
+
+<span class="sd">- :func:`notify` — send a script-aware notification email with an</span>
+<span class="sd">  auto-generated footer (host, script name, package version, git branch).</span>
+<span class="sd">- :func:`send_gmail` — low-level SMTP sender supporting CC, attachments and an</span>
+<span class="sd">  optional message ID. Despite the name, it works with any SMTP server and</span>
+<span class="sd">  auto-detects the server from the sender address.</span>
+
+<span class="sd">They are self-contained (stdlib only) and intentionally distinct from the</span>
+<span class="sd">``alert(backend=&quot;email&quot;)`` notification backend, which targets short alerts</span>
+<span class="sd">rather than full script-completion reports.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mimetypes</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">smtplib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">socket</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">email</span><span class="w"> </span><span class="kn">import</span> <span class="n">encoders</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">email.mime.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">MIMEBase</span> <span class="k">as</span> <span class="n">_MIMEBase</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">email.mime.multipart</span><span class="w"> </span><span class="kn">import</span> <span class="n">MIMEMultipart</span> <span class="k">as</span> <span class="n">_MIMEMultipart</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">email.mime.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">MIMEText</span> <span class="k">as</span> <span class="n">_MIMEText</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="n">ansi_escape</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\x1B(?:[@-Z</span><span class="se">\\</span><span class="s2">-_]|\[[0-?]*[ -/]*[@-~])&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_gen_id</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a short random alphanumeric ID (stdlib only).&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">string</span>
+
+    <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_uppercase</span> <span class="o">+</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">n</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_username</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the current username, falling back to env vars.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">pwd</span>
+
+        <span class="k">return</span> <span class="n">pwd</span><span class="o">.</span><span class="n">getpwuid</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getuid</span><span class="p">())</span><span class="o">.</span><span class="n">pw_name</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;USER&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;LOGNAME&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;unknown&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_hostname</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the local hostname.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">socket</span><span class="o">.</span><span class="n">gethostname</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_git_branch</span><span class="p">(</span><span class="n">package</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the current git branch of ``package``&#39;s source tree.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    package : module</span>
+<span class="sd">        A module exposing ``__path__`` (e.g. ``scitex_notification``).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">branch</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span>
+                <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;rev-parse&quot;</span><span class="p">,</span> <span class="s2">&quot;--abbrev-ref&quot;</span><span class="p">,</span> <span class="s2">&quot;HEAD&quot;</span><span class="p">],</span>
+                <span class="n">cwd</span><span class="o">=</span><span class="n">package</span><span class="o">.</span><span class="n">__path__</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">branch</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;main&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">gen_footer</span><span class="p">(</span><span class="n">sender</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">script_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">package</span><span class="p">,</span> <span class="n">branch</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the notification footer block.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sender : str</span>
+<span class="sd">        ``user@host`` identifier of the sender.</span>
+<span class="sd">    script_name : str</span>
+<span class="sd">        Name of the script that triggered the notification.</span>
+<span class="sd">    package : module</span>
+<span class="sd">        Module exposing ``__version__`` (used in the footer).</span>
+<span class="sd">    branch : str</span>
+<span class="sd">        Git branch name to reference.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">package</span><span class="p">,</span> <span class="s2">&quot;__version__&quot;</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+
+<span class="si">{</span><span class="s2">&quot;-&quot;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">30</span><span class="si">}</span>
+<span class="s2">Sent via</span>
+<span class="s2">- Host: </span><span class="si">{</span><span class="n">sender</span><span class="si">}</span>
+<span class="s2">- Script: </span><span class="si">{</span><span class="n">script_name</span><span class="si">}</span>
+<span class="s2">- Source: scitex-notification v</span><span class="si">{</span><span class="n">version</span><span class="si">}</span>
+<span class="si">{</span><span class="s2">&quot;-&quot;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">30</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="send_gmail">
+<a class="viewcode-back" href="../../api/scitex_notification.html#scitex_notification.send_gmail">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">send_gmail</span><span class="p">(</span>
+    <span class="n">sender_gmail</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">sender_password</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">recipient_email</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">subject</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">sender_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">cc</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ID</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">attachment_paths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">smtp_server</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">smtp_port</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Send an email via SMTP.</span>
+
+<span class="sd">    Despite the name, supports any SMTP server. Uses</span>
+<span class="sd">    ``mail1030.onamae.ne.jp`` by default (for scitex.ai emails) and falls back</span>
+<span class="sd">    to Gmail&#39;s server when the sender address ends in ``@gmail.com``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sender_gmail : str</span>
+<span class="sd">        Sender email address (and SMTP login).</span>
+<span class="sd">    sender_password : str</span>
+<span class="sd">        SMTP password.</span>
+<span class="sd">    recipient_email : str</span>
+<span class="sd">        Primary recipient address.</span>
+<span class="sd">    subject : str</span>
+<span class="sd">        Email subject. If ``ID`` is given it is appended as ``(ID: ...)``.</span>
+<span class="sd">    message : str</span>
+<span class="sd">        Plain-text body.</span>
+<span class="sd">    sender_name : str, optional</span>
+<span class="sd">        Display name for the ``From`` header.</span>
+<span class="sd">    cc : str or list, optional</span>
+<span class="sd">        CC recipient(s).</span>
+<span class="sd">    ID : str, optional</span>
+<span class="sd">        Message ID. Pass ``&quot;auto&quot;`` to auto-generate one.</span>
+<span class="sd">    attachment_paths : list, optional</span>
+<span class="sd">        Paths of files to attach. ``.log`` files are ANSI-stripped.</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        Print a confirmation line on success.</span>
+<span class="sd">    smtp_server, smtp_port : optional</span>
+<span class="sd">        Override SMTP host/port auto-detection.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ID</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
+        <span class="n">ID</span> <span class="o">=</span> <span class="n">_gen_id</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">ID</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">subject</span><span class="p">:</span>
+            <span class="n">subject</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subject</span><span class="si">}</span><span class="s2"> (ID: </span><span class="si">{</span><span class="n">ID</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">subject</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ID: </span><span class="si">{</span><span class="n">ID</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="c1"># Auto-detect SMTP server based on sender email or use provided server</span>
+    <span class="k">if</span> <span class="n">smtp_server</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;@gmail.com&quot;</span> <span class="ow">in</span> <span class="n">sender_gmail</span><span class="p">:</span>
+            <span class="n">smtp_server</span> <span class="o">=</span> <span class="s2">&quot;smtp.gmail.com&quot;</span>
+            <span class="n">smtp_port</span> <span class="o">=</span> <span class="n">smtp_port</span> <span class="ow">or</span> <span class="mi">587</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Use scitex.ai mail server for scitex.ai emails</span>
+            <span class="n">smtp_server</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span>
+                <span class="s2">&quot;SCITEX_SCHOLAR_FROM_EMAIL_SMTP_SERVER&quot;</span><span class="p">,</span> <span class="s2">&quot;mail1030.onamae.ne.jp&quot;</span>
+            <span class="p">)</span>
+            <span class="n">smtp_port</span> <span class="o">=</span> <span class="n">smtp_port</span> <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;SCITEX_SCHOLAR_FROM_EMAIL_SMTP_PORT&quot;</span><span class="p">,</span> <span class="s2">&quot;587&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="n">smtp_port</span> <span class="o">=</span> <span class="n">smtp_port</span> <span class="ow">or</span> <span class="mi">587</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">server</span> <span class="o">=</span> <span class="n">smtplib</span><span class="o">.</span><span class="n">SMTP</span><span class="p">(</span><span class="n">smtp_server</span><span class="p">,</span> <span class="n">smtp_port</span><span class="p">)</span>
+        <span class="n">server</span><span class="o">.</span><span class="n">starttls</span><span class="p">()</span>
+        <span class="n">server</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">sender_gmail</span><span class="p">,</span> <span class="n">sender_password</span><span class="p">)</span>
+
+        <span class="n">gmail</span> <span class="o">=</span> <span class="n">_MIMEMultipart</span><span class="p">()</span>
+        <span class="n">gmail</span><span class="p">[</span><span class="s2">&quot;Subject&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">subject</span>
+        <span class="n">gmail</span><span class="p">[</span><span class="s2">&quot;To&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">recipient_email</span>
+        <span class="k">if</span> <span class="n">cc</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cc</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">gmail</span><span class="p">[</span><span class="s2">&quot;Cc&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cc</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cc</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">gmail</span><span class="p">[</span><span class="s2">&quot;Cc&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cc</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sender_name</span><span class="p">:</span>
+            <span class="n">gmail</span><span class="p">[</span><span class="s2">&quot;From&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sender_name</span><span class="si">}</span><span class="s2"> &lt;</span><span class="si">{</span><span class="n">sender_gmail</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gmail</span><span class="p">[</span><span class="s2">&quot;From&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sender_gmail</span>
+        <span class="n">gmail_body</span> <span class="o">=</span> <span class="n">_MIMEText</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="s2">&quot;plain&quot;</span><span class="p">)</span>
+        <span class="n">gmail</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">gmail_body</span><span class="p">)</span>
+
+        <span class="c1"># Attachment files</span>
+        <span class="k">if</span> <span class="n">attachment_paths</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">attachment_paths</span><span class="p">:</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;.log&quot;</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                        <span class="n">content</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+                        <span class="n">cleaned_content</span> <span class="o">=</span> <span class="n">ansi_escape</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span>
+                        <span class="n">part</span> <span class="o">=</span> <span class="n">_MIMEText</span><span class="p">(</span><span class="n">cleaned_content</span><span class="p">,</span> <span class="s2">&quot;plain&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">mime_type</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">mimetypes</span><span class="o">.</span><span class="n">guess_type</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">mime_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">mime_type</span> <span class="o">=</span> <span class="s2">&quot;text/plain&quot;</span>
+                    <span class="n">main_type</span><span class="p">,</span> <span class="n">sub_type</span> <span class="o">=</span> <span class="n">mime_type</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                        <span class="n">part</span> <span class="o">=</span> <span class="n">_MIMEBase</span><span class="p">(</span><span class="n">main_type</span><span class="p">,</span> <span class="n">sub_type</span><span class="p">)</span>
+                        <span class="n">part</span><span class="o">.</span><span class="n">set_payload</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+                        <span class="n">encoders</span><span class="o">.</span><span class="n">encode_base64</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+
+                <span class="n">part</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span>
+                    <span class="s2">&quot;Content-Disposition&quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;attachment; filename=</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">gmail</span><span class="o">.</span><span class="n">attach</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+
+        <span class="n">recipients</span> <span class="o">=</span> <span class="p">[</span><span class="n">recipient_email</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">cc</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cc</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">recipients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cc</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cc</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">recipients</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">cc</span><span class="p">)</span>
+        <span class="n">server</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">gmail</span><span class="p">,</span> <span class="n">to_addrs</span><span class="o">=</span><span class="n">recipients</span><span class="p">)</span>
+
+        <span class="n">server</span><span class="o">.</span><span class="n">quit</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="n">cc_info</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; (CC: </span><span class="si">{</span><span class="n">cc</span><span class="si">}</span><span class="s2">)&quot;</span> <span class="k">if</span> <span class="n">cc</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="s2">&quot;Email was sent:</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">sender_gmail</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">recipient_email</span><span class="si">}{</span><span class="n">cc_info</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;    (ID: </span><span class="si">{</span><span class="n">ID</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="n">attachment_paths</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;    Attached:</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="k">for</span> <span class="n">ap</span> <span class="ow">in</span> <span class="n">attachment_paths</span><span class="p">:</span>
+                    <span class="n">out</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;        </span><span class="si">{</span><span class="n">ap</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Email was not sent: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># This is an automated system notification. If received outside working hours,</span>
+<span class="c1"># please disregard.</span>
+<div class="viewcode-block" id="notify">
+<a class="viewcode-back" href="../../api/scitex_notification.html#scitex_notification.notify">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">notify</span><span class="p">(</span>
+    <span class="n">subject</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;:)&quot;</span><span class="p">,</span>
+    <span class="n">file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ID</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+    <span class="n">sender_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">recipient_email</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">cc</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">attachment_paths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Send a script-aware notification email.</span>
+
+<span class="sd">    Builds a subject/body from the calling script&#39;s name and appends a footer</span>
+<span class="sd">    with host, script, package version and git branch, then delegates to</span>
+<span class="sd">    :func:`send_gmail`.</span>
+
+<span class="sd">    Credentials and recipient are read from environment variables (with</span>
+<span class="sd">    backward-compatible aliases):</span>
+
+<span class="sd">    - sender: ``SCITEX_SCHOLAR_EMAIL_NOREPLY`` /</span>
+<span class="sd">      ``SCITEX_SCHOLAR_FROM_EMAIL_ADDRESS`` / ``SCITEX_EMAIL_NOREPLY`` /</span>
+<span class="sd">      ``SCITEX_EMAIL_AGENT`` (default ``no-reply@scitex.ai``)</span>
+<span class="sd">    - password: ``SCITEX_SCHOLAR_EMAIL_PASSWORD`` /</span>
+<span class="sd">      ``SCITEX_SCHOLAR_FROM_EMAIL_PASSWORD`` / ``SCITEX_EMAIL_PASSWORD``</span>
+<span class="sd">    - recipient: ``SCITEX_SCHOLAR_EMAIL_RECIPIENT`` /</span>
+<span class="sd">      ``SCITEX_SCHOLAR_TO_EMAIL_ADDRESS`` (or pass ``recipient_email=``)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">scitex_notification</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_pkg</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="n">FAKE_PYTHON_SCRIPT_NAME</span> <span class="o">=</span> <span class="s2">&quot;$ python -c ...&quot;</span>
+    <span class="n">sender_gmail</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span>
+        <span class="s2">&quot;SCITEX_SCHOLAR_EMAIL_NOREPLY&quot;</span><span class="p">,</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span>
+            <span class="s2">&quot;SCITEX_SCHOLAR_FROM_EMAIL_ADDRESS&quot;</span><span class="p">,</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span>
+                <span class="s2">&quot;SCITEX_EMAIL_NOREPLY&quot;</span><span class="p">,</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;SCITEX_EMAIL_AGENT&quot;</span><span class="p">,</span> <span class="s2">&quot;no-reply@scitex.ai&quot;</span><span class="p">),</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">sender_password</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span>
+        <span class="s2">&quot;SCITEX_SCHOLAR_EMAIL_PASSWORD&quot;</span><span class="p">,</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span>
+            <span class="s2">&quot;SCITEX_SCHOLAR_FROM_EMAIL_PASSWORD&quot;</span><span class="p">,</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;SCITEX_EMAIL_PASSWORD&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">recipient_email</span> <span class="o">=</span> <span class="n">recipient_email</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span>
+        <span class="s2">&quot;SCITEX_SCHOLAR_EMAIL_RECIPIENT&quot;</span><span class="p">,</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;SCITEX_SCHOLAR_TO_EMAIL_ADDRESS&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">script_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">script_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">frames</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()</span>
+            <span class="n">script_name</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">frames</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span> <span class="k">if</span> <span class="n">frames</span> <span class="k">else</span> <span class="s2">&quot;(Not found)&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">script_name</span> <span class="o">==</span> <span class="s2">&quot;-c&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">script_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.py&quot;</span><span class="p">)):</span>
+            <span class="n">script_name</span> <span class="o">=</span> <span class="n">FAKE_PYTHON_SCRIPT_NAME</span>
+
+    <span class="n">sender</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">get_username</span><span class="p">()</span><span class="si">}</span><span class="s2">@</span><span class="si">{</span><span class="n">get_hostname</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">branch</span> <span class="o">=</span> <span class="n">get_git_branch</span><span class="p">(</span><span class="n">_pkg</span><span class="p">)</span>
+    <span class="n">footer</span> <span class="o">=</span> <span class="n">gen_footer</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">script_name</span><span class="p">,</span> <span class="n">_pkg</span><span class="p">,</span> <span class="n">branch</span><span class="p">)</span>
+
+    <span class="n">full_message</span> <span class="o">=</span> <span class="n">script_name</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">message</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">footer</span>
+    <span class="n">full_subject</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">script_name</span><span class="si">}</span><span class="s2">—</span><span class="si">{</span><span class="n">subject</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">subject</span> <span class="ow">and</span> <span class="p">(</span><span class="n">script_name</span> <span class="o">!=</span> <span class="n">FAKE_PYTHON_SCRIPT_NAME</span><span class="p">)</span>
+        <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subject</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">sender_gmail</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">sender_password</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        Please set environmental variables to use this function (</span><span class="si">{</span><span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">):</span><span class="se">\n\n</span>
+<span class="s2">        $ export SCITEX_SCHOLAR_FROM_EMAIL_ADDRESS=&quot;agent@scitex.ai&quot;</span>
+<span class="s2">        $ export SCITEX_SCHOLAR_FROM_EMAIL_PASSWORD=&quot;YOUR_EMAIL_PASSWORD&quot;</span>
+<span class="s2">        $ export SCITEX_SCHOLAR_TO_EMAIL_ADDRESS=&quot;YOUR_EMAIL_ADDRESS&quot;</span>
+
+<span class="s2">        Or alternatively:</span>
+<span class="s2">        $ export SCITEX_EMAIL_AGENT=&quot;agent@scitex.ai&quot;</span>
+<span class="s2">        $ export SCITEX_EMAIL_PASSWORD=&quot;YOUR_EMAIL_PASSWORD&quot;</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">send_gmail</span><span class="p">(</span>
+        <span class="n">sender_gmail</span><span class="p">,</span>
+        <span class="n">sender_password</span><span class="p">,</span>
+        <span class="n">recipient_email</span><span class="p">,</span>
+        <span class="n">full_subject</span><span class="p">,</span>
+        <span class="n">full_message</span><span class="p">,</span>
+        <span class="n">sender_name</span><span class="o">=</span><span class="n">sender_name</span><span class="p">,</span>
+        <span class="n">cc</span><span class="o">=</span><span class="n">cc</span><span class="p">,</span>
+        <span class="n">ID</span><span class="o">=</span><span class="n">ID</span><span class="p">,</span>
+        <span class="n">attachment_paths</span><span class="o">=</span><span class="n">attachment_paths</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># EOF</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Yusuke Watanabe.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

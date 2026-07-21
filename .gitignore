@@ -661,3 +661,16 @@ flycheck_*.el
 
 ### Source: /home/ywatanabe/.git-templates/.gitignore-templates/Custom/SLURM.gitignore ###
 slurm_logs
+
+### scitex local-state directories ###
+# runtime contents are regenerable — never commit
+.scitex/*/runtime/*
+!.scitex/*/runtime/.gitkeep
+!.scitex/*/runtime/README.md
+
+# Un-ignore committed example FINISHED_SUCCESS artefacts (PS503)
+!examples/*_out/FINISHED_SUCCESS/
+!examples/*_out/FINISHED_SUCCESS/**
+!examples/*_out/FINISHED_SUCCESS/**/202?Y-*
+!examples/*_out/FINISHED_SUCCESS/**/202?Y-*/**
+.worktrees/

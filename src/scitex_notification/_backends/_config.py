@@ -9,7 +9,8 @@ Priority resolution:
 
 Configuration sources:
 1. YAML file: path from SCITEX_NOTIFICATION_CONFIG env var
-2. Environment variables: SCITEX_NOTIFICATION_*
+2. ``~/.scitex/notification/config.yaml`` (canonical scitex fallback, SCITEX_DIR-aware)
+3. Environment variables: SCITEX_NOTIFICATION_*
 
 Env file sourcing:
     If SCITEX_NOTIFICATION_ENV_SRC is set, that file is sourced before
@@ -32,7 +33,7 @@ Example YAML:
         playwright: 5.0
 
 Environment variables:
-    SCITEX_NOTIFICATION_CONFIG: Path to custom config YAML file
+    SCITEX_NOTIFICATION_CONFIG: Path to custom config YAML file (overrides ``~/.scitex/notification/config.yaml``)
     SCITEX_NOTIFICATION_ENV_SRC: Path to env file to source before reading vars
     SCITEX_NOTIFICATION_DEFAULT_BACKEND: audio
     SCITEX_NOTIFICATION_BACKEND_PRIORITY: audio,desktop,email (comma-separated)
@@ -49,6 +50,7 @@ from __future__ import annotations
 import importlib.util
 import os
 from functools import lru_cache
+from pathlib import Path
 from typing import Optional
 
 from ._types import NotifyLevel
@@ -138,6 +140,49 @@ def _load_yaml_config(config_path: str) -> dict:
         return {}
 
 
+def _scitex_notification_dir() -> Path:
+    """Return the canonical user-scope root for scitex-notification.
+
+    Honours ``$SCITEX_DIR`` per ecosystem local-state-directories §6.
+    Returns ``~/.scitex/notification/`` (or ``$SCITEX_DIR/notification/``)
+    with lazy mkdir.
+    """
+    base = Path(
+        os.environ.get(
+            "SCITEX_DIR",
+            os.path.join(os.path.expanduser("~"), ".scitex"),
+        )
+    )
+    pkg_dir = base / "notification"
+    pkg_dir.mkdir(parents=True, exist_ok=True)
+    return pkg_dir
+
+
+def _scitex_notification_runtime_dir() -> Path:
+    """Return the runtime directory for scitex-notification.
+
+    Returns ``<scitex-dir>/notification/runtime/`` with lazy mkdir.
+    This is where regenerable data (cache, logs, PID files, etc.)
+    belongs per ecosystem local-state-directories §4b.
+    """
+    rt_dir = _scitex_notification_dir() / "runtime"
+    rt_dir.mkdir(parents=True, exist_ok=True)
+    return rt_dir
+
+
+def _resolve_default_config_path() -> Optional[str]:
+    """Resolve the default config path via the canonical scitex layout.
+
+    Returns
+    -------
+    str or None
+        ``~/.scitex/notification/config.yaml`` (or SCITEX_DIR equivalent)
+        if the file exists, otherwise None.
+    """
+    path = _scitex_notification_dir() / "config.yaml"
+    return str(path) if path.exists() else None
+
+
 class UIConfig:
     """Configuration manager for scitex_notification (standalone)."""
 
@@ -173,7 +218,11 @@ class UIConfig:
             _source_env_file(env_src)
 
         # 2. Load YAML config if a path is available
-        config_path = self._config_path or os.getenv("SCITEX_NOTIFICATION_CONFIG")
+        config_path = (
+            self._config_path
+            or os.getenv("SCITEX_NOTIFICATION_CONFIG")
+            or _resolve_default_config_path()
+        )
         if config_path:
             yaml_config = _load_yaml_config(config_path)
             if yaml_config:

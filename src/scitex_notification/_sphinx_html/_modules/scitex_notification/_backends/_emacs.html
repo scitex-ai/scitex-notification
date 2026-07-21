@@ -1,0 +1,334 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scitex_notification._backends._emacs &mdash; scitex-notification 0.2.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=b01fafc3"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            scitex-notification
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../backends.html">Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../env_vars.html">Environment Variables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/scitex_notification.html">scitex_notification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/backends.html">Backends API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/mcp.html">MCP Server</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">scitex-notification</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../scitex_notification.html">scitex_notification</a></li>
+          <li class="breadcrumb-item"><a href="../_backends.html">scitex_notification._backends</a></li>
+      <li class="breadcrumb-item active">scitex_notification._backends._emacs</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scitex_notification._backends._emacs</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># Timestamp: &quot;2026-01-13 (ywatanabe)&quot;</span>
+<span class="c1"># File: /home/ywatanabe/proj/scitex-notification/src/scitex_notification/_backends/_emacs.py</span>
+
+<span class="sd">&quot;&quot;&quot;Emacs notification backend using emacsclient.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">._types</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseNotifyBackend</span><span class="p">,</span> <span class="n">NotifyLevel</span><span class="p">,</span> <span class="n">NotifyResult</span>
+
+
+<div class="viewcode-block" id="EmacsBackend">
+<a class="viewcode-back" href="../../../api/backends.html#scitex_notification._backends.EmacsBackend">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EmacsBackend</span><span class="p">(</span><span class="n">BaseNotifyBackend</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Notification via Emacs using emacsclient.</span>
+
+<span class="sd">    Displays notifications in Emacs minibuffer or as alerts.</span>
+<span class="sd">    Supports different display methods:</span>
+<span class="sd">    - popup: temporary popup buffer (default, most noticeable)</span>
+<span class="sd">    - minibuffer: message function</span>
+<span class="sd">    - alert: alert.el package</span>
+<span class="sd">    - notifications: notifications.el (desktop notifications from Emacs)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;emacs&quot;</span>
+
+<div class="viewcode-block" id="EmacsBackend.__init__">
+<a class="viewcode-back" href="../../../api/backends.html#scitex_notification._backends.EmacsBackend.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;popup&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize Emacs backend.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        method : str</span>
+<span class="sd">            Notification method: &#39;popup&#39;, &#39;minibuffer&#39;, &#39;alert&#39;, or &#39;notifications&#39;</span>
+<span class="sd">        timeout : float</span>
+<span class="sd">            Display timeout for visual methods</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span></div>
+
+
+<div class="viewcode-block" id="EmacsBackend.is_available">
+<a class="viewcode-back" href="../../../api/backends.html#scitex_notification._backends.EmacsBackend.is_available">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_available</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if emacsclient is available.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;emacsclient&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_escape_elisp_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Escape a string for use in elisp.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\\\\</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">n&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_face_for_level</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="n">NotifyLevel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get Emacs face name for notification level.&quot;&quot;&quot;</span>
+        <span class="n">faces</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span> <span class="s2">&quot;success&quot;</span><span class="p">,</span>
+            <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">WARNING</span><span class="p">:</span> <span class="s2">&quot;warning&quot;</span><span class="p">,</span>
+            <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span> <span class="s2">&quot;error&quot;</span><span class="p">,</span>
+            <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">:</span> <span class="s2">&quot;error&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">faces</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EmacsBackend.send">
+<a class="viewcode-back" href="../../../api/backends.html#scitex_notification._backends.EmacsBackend.send">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">title</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">level</span><span class="p">:</span> <span class="n">NotifyLevel</span> <span class="o">=</span> <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NotifyResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Send notification via Emacs.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;method&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">)</span>
+            <span class="n">timeout</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;timeout&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">)</span>
+
+            <span class="c1"># Escape strings for elisp</span>
+            <span class="n">msg_escaped</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_escape_elisp_string</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+            <span class="n">title_escaped</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_escape_elisp_string</span><span class="p">(</span><span class="n">title</span> <span class="ow">or</span> <span class="s2">&quot;SciTeX&quot;</span><span class="p">)</span>
+            <span class="n">face</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_face_for_level</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+
+            <span class="c1"># Build elisp command based on method</span>
+            <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;popup&quot;</span><span class="p">:</span>
+                <span class="c1"># Popup buffer - most noticeable</span>
+                <span class="n">level_colors</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span> <span class="s2">&quot;#98C379&quot;</span><span class="p">,</span>  <span class="c1"># green</span>
+                    <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">WARNING</span><span class="p">:</span> <span class="s2">&quot;#E5C07B&quot;</span><span class="p">,</span>  <span class="c1"># yellow</span>
+                    <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span> <span class="s2">&quot;#E06C75&quot;</span><span class="p">,</span>  <span class="c1"># red</span>
+                    <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">:</span> <span class="s2">&quot;#E06C75&quot;</span><span class="p">,</span>  <span class="c1"># red</span>
+                <span class="p">}</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="n">level_colors</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="s2">&quot;#98C379&quot;</span><span class="p">)</span>
+                <span class="n">elisp</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                (let* ((buf (get-buffer-create &quot;*SciTeX Alert*&quot;))</span>
+<span class="s2">                       (timeout </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span><span class="si">}</span><span class="s2">))</span>
+<span class="s2">                  (with-current-buffer buf</span>
+<span class="s2">                    (erase-buffer)</span>
+<span class="s2">                    (insert (propertize &quot;</span><span class="se">\\</span><span class="s2">n  ╔══════════════════════════════════════╗</span><span class="se">\\</span><span class="s2">n&quot;</span>
+<span class="s2">                                        &#39;face &#39;(:foreground &quot;</span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s2">&quot; :weight bold)))</span>
+<span class="s2">                    (insert (propertize &quot;  ║  SciTeX Alert                        ║</span><span class="se">\\</span><span class="s2">n&quot;</span>
+<span class="s2">                                        &#39;face &#39;(:foreground &quot;</span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s2">&quot; :weight bold)))</span>
+<span class="s2">                    (insert (propertize &quot;  ╠══════════════════════════════════════╣</span><span class="se">\\</span><span class="s2">n&quot;</span>
+<span class="s2">                                        &#39;face &#39;(:foreground &quot;</span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s2">&quot;)))</span>
+<span class="s2">                    (insert (propertize (format &quot;  ║  [%s] %s</span><span class="se">\\</span><span class="s2">n&quot; &quot;</span><span class="si">{</span><span class="n">level</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot; &quot;</span><span class="si">{</span><span class="n">msg_escaped</span><span class="si">}</span><span class="s2">&quot;)</span>
+<span class="s2">                                        &#39;face &#39;(:foreground &quot;</span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s2">&quot;)))</span>
+<span class="s2">                    (insert (propertize &quot;  ╚══════════════════════════════════════╝</span><span class="se">\\</span><span class="s2">n&quot;</span>
+<span class="s2">                                        &#39;face &#39;(:foreground &quot;</span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s2">&quot;)))</span>
+<span class="s2">                    (goto-char (point-min)))</span>
+<span class="s2">                  (display-buffer buf</span>
+<span class="s2">                    &#39;((display-buffer-in-side-window)</span>
+<span class="s2">                      (side . bottom)</span>
+<span class="s2">                      (window-height . 8)))</span>
+<span class="s2">                  (run-at-time timeout nil</span>
+<span class="s2">                    (lambda ()</span>
+<span class="s2">                      (when-let ((win (get-buffer-window buf t)))</span>
+<span class="s2">                        (delete-window win))</span>
+<span class="s2">                      (kill-buffer buf)))</span>
+<span class="s2">                  (message &quot;[SciTeX] %s&quot; &quot;</span><span class="si">{</span><span class="n">msg_escaped</span><span class="si">}</span><span class="s2">&quot;))</span>
+<span class="s2">                &quot;&quot;&quot;</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;alert&quot;</span><span class="p">:</span>
+                <span class="c1"># Use alert.el package (if installed)</span>
+                <span class="n">severity_map</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>
+                    <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">WARNING</span><span class="p">:</span> <span class="s2">&quot;moderate&quot;</span><span class="p">,</span>
+                    <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span> <span class="s2">&quot;high&quot;</span><span class="p">,</span>
+                    <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">:</span> <span class="s2">&quot;urgent&quot;</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="n">severity</span> <span class="o">=</span> <span class="n">severity_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="s2">&quot;normal&quot;</span><span class="p">)</span>
+                <span class="n">elisp</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                (if (fboundp &#39;alert)</span>
+<span class="s2">                    (alert &quot;</span><span class="si">{</span><span class="n">msg_escaped</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">                           :title &quot;</span><span class="si">{</span><span class="n">title_escaped</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">                           :severity &#39;</span><span class="si">{</span><span class="n">severity</span><span class="si">}</span>
+<span class="s2">                           :timeout </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span><span class="si">}</span><span class="s2">)</span>
+<span class="s2">                  (message &quot;[%s] %s: %s&quot; &quot;</span><span class="si">{</span><span class="n">level</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot; &quot;</span><span class="si">{</span><span class="n">title_escaped</span><span class="si">}</span><span class="s2">&quot; &quot;</span><span class="si">{</span><span class="n">msg_escaped</span><span class="si">}</span><span class="s2">&quot;))</span>
+<span class="s2">                &quot;&quot;&quot;</span>
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;notifications&quot;</span><span class="p">:</span>
+                <span class="c1"># Use notifications.el (requires D-Bus)</span>
+                <span class="n">urgency_map</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">INFO</span><span class="p">:</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>
+                    <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">WARNING</span><span class="p">:</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>
+                    <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span> <span class="s2">&quot;critical&quot;</span><span class="p">,</span>
+                    <span class="n">NotifyLevel</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">:</span> <span class="s2">&quot;critical&quot;</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="n">urgency</span> <span class="o">=</span> <span class="n">urgency_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="s2">&quot;normal&quot;</span><span class="p">)</span>
+                <span class="n">elisp</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                (if (fboundp &#39;notifications-notify)</span>
+<span class="s2">                    (notifications-notify</span>
+<span class="s2">                     :title &quot;</span><span class="si">{</span><span class="n">title_escaped</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">                     :body &quot;</span><span class="si">{</span><span class="n">msg_escaped</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">                     :urgency &#39;</span><span class="si">{</span><span class="n">urgency</span><span class="si">}</span>
+<span class="s2">                     :timeout </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">timeout</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1000</span><span class="p">)</span><span class="si">}</span><span class="s2">)</span>
+<span class="s2">                  (message &quot;[%s] %s: %s&quot; &quot;</span><span class="si">{</span><span class="n">level</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot; &quot;</span><span class="si">{</span><span class="n">title_escaped</span><span class="si">}</span><span class="s2">&quot; &quot;</span><span class="si">{</span><span class="n">msg_escaped</span><span class="si">}</span><span class="s2">&quot;))</span>
+<span class="s2">                &quot;&quot;&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Default: minibuffer message with face</span>
+                <span class="n">elisp</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                (let ((msg (propertize &quot;[</span><span class="si">{</span><span class="n">level</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">title_escaped</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">msg_escaped</span><span class="si">}</span><span class="s2">&quot; &#39;face &#39;</span><span class="si">{</span><span class="n">face</span><span class="si">}</span><span class="s2">)))</span>
+<span class="s2">                  (message &quot;%s&quot; msg))</span>
+<span class="s2">                &quot;&quot;&quot;</span>
+
+            <span class="c1"># Clean up elisp (remove extra whitespace)</span>
+            <span class="n">elisp</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elisp</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+
+            <span class="c1"># Execute via emacsclient</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;emacsclient&quot;</span><span class="p">,</span> <span class="s2">&quot;--eval&quot;</span><span class="p">,</span> <span class="n">elisp</span><span class="p">]</span>
+
+            <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_in_executor</span><span class="p">(</span>
+                <span class="kc">None</span><span class="p">,</span>
+                <span class="k">lambda</span><span class="p">:</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                    <span class="n">cmd</span><span class="p">,</span>
+                    <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">NotifyResult</span><span class="p">(</span>
+                    <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span>
+                    <span class="n">timestamp</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                    <span class="n">details</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span> <span class="s2">&quot;elisp_result&quot;</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()},</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">NotifyResult</span><span class="p">(</span>
+                    <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span>
+                    <span class="n">timestamp</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                    <span class="n">error</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;emacsclient failed&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">NotifyResult</span><span class="p">(</span>
+                <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span>
+                <span class="n">timestamp</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                <span class="n">error</span><span class="o">=</span><span class="s2">&quot;emacsclient timed out&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">NotifyResult</span><span class="p">(</span>
+                <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span>
+                <span class="n">timestamp</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                <span class="n">error</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># EOF</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Yusuke Watanabe.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

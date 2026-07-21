@@ -6,19 +6,20 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SciTeX Notification &mdash; scitex-notification 0.2.5 documentation</title>
+  <title>SciTeX Notification &mdash; scitex-notification 0.2.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=cb850272"></script>
+      <script src="_static/documentation_options.js?v=b01fafc3"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Quickstart" href="quickstart.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -40,18 +41,20 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">SciTeX Notification</a><ul>
-<li><a class="reference internal" href="#supported-backends">Supported Backends</a><ul>
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backends.html">Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="env_vars.html">Environment Variables</a></li>
 </ul>
-</li>
-<li><a class="reference internal" href="#quick-example">Quick Example</a></li>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/scitex_notification.html">scitex_notification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/backends.html">Backends API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/mcp.html">MCP Server</a></li>
 </ul>
-</li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
-</ul>
-</div>
+
         </div>
       </div>
     </nav>
@@ -78,19 +81,19 @@
              
   <section id="scitex-notification">
 <h1>SciTeX Notification<a class="headerlink" href="#scitex-notification" title="Link to this heading"></a></h1>
-<p align="center"><b>Multi-backend notification system for scientific workflows</b></p>
-<br><p><strong>SciTeX Notification</strong> provides a unified interface for sending notifications
-across multiple backends, allowing you to stay informed about long-running
-scientific computations wherever you are.</p>
-<section id="supported-backends">
-<h2>Supported Backends<a class="headerlink" href="#supported-backends" title="Link to this heading"></a></h2>
+<p align="center"><b>One-call alerting across 9 backends — audio, desktop, emacs, matplotlib, playwright, email, webhook, Telegram, Twilio.</b></p>
+<br><p><strong>SciTeX Notification</strong> provides a unified alerting interface across 9 backends
+with automatic fallback. Perfect for long-running scientific computations, AI
+agents, and any workflow that needs your attention — even while you sleep.</p>
+<section id="backends">
+<h2>Backends<a class="headerlink" href="#backends" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 20.0%" />
 <col style="width: 15.0%" />
-<col style="width: 15.0%" />
-<col style="width: 30.0%" />
+<col style="width: 20.0%" />
+<col style="width: 10.0%" />
+<col style="width: 10.0%" />
+<col style="width: 45.0%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Backend</p></th>
@@ -102,50 +105,152 @@ scientific computations wherever you are.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><strong>Audio</strong></p></td>
-<td><p>Local audio alert</p></td>
+<td><p>TTS to local speakers</p></td>
 <td><p>Free</p></td>
 <td><p>No</p></td>
-<td><p>Requires scitex-audio</p></td>
+<td><p>Via scitex-audio; SSH relay supported</p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>SMS (Twilio)</strong></p></td>
-<td><p>SMS text message</p></td>
-<td><p>Paid</p></td>
-<td><p>Required</p></td>
-<td><p>Requires Twilio account</p></td>
+<tr class="row-odd"><td><p><strong>Desktop</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">notify-send</span></code> / PowerShell</p></td>
+<td><p>Free</p></td>
+<td><p>No</p></td>
+<td><p>Linux / WSL</p></td>
 </tr>
-<tr class="row-even"><td><p><strong>Email</strong></p></td>
-<td><p>SMTP email</p></td>
+<tr class="row-even"><td><p><strong>Emacs</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">emacsclient</span></code> popup</p></td>
+<td><p>Free</p></td>
+<td><p>No</p></td>
+<td><p>Popup, minibuffer, or alert</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Matplotlib</strong></p></td>
+<td><p>Visual popup window</p></td>
+<td><p>Free</p></td>
+<td><p>No</p></td>
+<td><p>Requires <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Playwright</strong></p></td>
+<td><p>Browser popup</p></td>
+<td><p>Free</p></td>
+<td><p>No</p></td>
+<td><p>Requires <code class="docutils literal notranslate"><span class="pre">playwright</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Email</strong></p></td>
+<td><p>SMTP</p></td>
 <td><p>Free</p></td>
 <td><p>Required</p></td>
-<td><p>Supports Gmail, SMTP relay</p></td>
+<td><p>Gmail, SMTP relay</p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>Webhook</strong></p></td>
+<tr class="row-even"><td><p><strong>Webhook</strong></p></td>
 <td><p>HTTP POST</p></td>
 <td><p>Free</p></td>
 <td><p>Required</p></td>
 <td><p>Slack, Discord, custom endpoints</p></td>
 </tr>
+<tr class="row-odd"><td><p><strong>Telegram</strong></p></td>
+<td><p>Telegram Bot API</p></td>
+<td><p>Free</p></td>
+<td><p>Required</p></td>
+<td><p>No SDK dependency (urllib only)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Twilio</strong></p></td>
+<td><p>Phone call / SMS</p></td>
+<td><p>Paid</p></td>
+<td><p>Required</p></td>
+<td><p>Twilio account needed; no SDK dependency</p></td>
+</tr>
 </tbody>
 </table>
 <div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#basic-usage">Basic Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#async-usage">Async Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="backends.html">Backends</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="backends.html#available-backends">Available Backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="backends.html#fallback-priority">Fallback Priority</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#default-backend">Default Backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#per-backend-configuration">Per-Backend Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#programmatic-use">Programmatic Use</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="env_vars.html">Environment Variables</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="env_vars.html#general">General</a></li>
+<li class="toctree-l2"><a class="reference internal" href="env_vars.html#email">Email</a></li>
+<li class="toctree-l2"><a class="reference internal" href="env_vars.html#twilio">Twilio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="env_vars.html#telegram">Telegram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="env_vars.html#webhook">Webhook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="env_vars.html#playwright">Playwright</a></li>
+</ul>
+</li>
+</ul>
 </div>
 <div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/scitex_notification.html">scitex_notification</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/scitex_notification.html#scitex_notification.alert"><code class="docutils literal notranslate"><span class="pre">alert()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/scitex_notification.html#scitex_notification.alert_async"><code class="docutils literal notranslate"><span class="pre">alert_async()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/scitex_notification.html#scitex_notification.available_backends"><code class="docutils literal notranslate"><span class="pre">available_backends()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/scitex_notification.html#scitex_notification.call"><code class="docutils literal notranslate"><span class="pre">call()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/scitex_notification.html#scitex_notification.call_async"><code class="docutils literal notranslate"><span class="pre">call_async()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/scitex_notification.html#scitex_notification.notify"><code class="docutils literal notranslate"><span class="pre">notify()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/scitex_notification.html#scitex_notification.send_gmail"><code class="docutils literal notranslate"><span class="pre">send_gmail()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/scitex_notification.html#scitex_notification.sms"><code class="docutils literal notranslate"><span class="pre">sms()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/scitex_notification.html#scitex_notification.sms_async"><code class="docutils literal notranslate"><span class="pre">sms_async()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/backends.html">Backends API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/backends.html#scitex_notification._backends.AudioBackend"><code class="docutils literal notranslate"><span class="pre">AudioBackend</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/backends.html#scitex_notification._backends.BaseNotifyBackend"><code class="docutils literal notranslate"><span class="pre">BaseNotifyBackend</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/backends.html#scitex_notification._backends.DesktopBackend"><code class="docutils literal notranslate"><span class="pre">DesktopBackend</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/backends.html#scitex_notification._backends.EmacsBackend"><code class="docutils literal notranslate"><span class="pre">EmacsBackend</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/backends.html#scitex_notification._backends.EmailBackend"><code class="docutils literal notranslate"><span class="pre">EmailBackend</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/backends.html#scitex_notification._backends.MatplotlibBackend"><code class="docutils literal notranslate"><span class="pre">MatplotlibBackend</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/backends.html#scitex_notification._backends.NotifyLevel"><code class="docutils literal notranslate"><span class="pre">NotifyLevel</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/backends.html#scitex_notification._backends.NotifyResult"><code class="docutils literal notranslate"><span class="pre">NotifyResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/backends.html#scitex_notification._backends.PlaywrightBackend"><code class="docutils literal notranslate"><span class="pre">PlaywrightBackend</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/backends.html#scitex_notification._backends.TelegramBackend"><code class="docutils literal notranslate"><span class="pre">TelegramBackend</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/backends.html#scitex_notification._backends.TwilioBackend"><code class="docutils literal notranslate"><span class="pre">TwilioBackend</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/backends.html#scitex_notification._backends.WebhookBackend"><code class="docutils literal notranslate"><span class="pre">WebhookBackend</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/backends.html#scitex_notification._backends.available_backends"><code class="docutils literal notranslate"><span class="pre">available_backends()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/backends.html#scitex_notification._backends.get_backend"><code class="docutils literal notranslate"><span class="pre">get_backend()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/mcp.html">MCP Server</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/mcp.html#scitex_notification.mcp_server.NotifyServer"><code class="docutils literal notranslate"><span class="pre">NotifyServer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/mcp.html#scitex_notification.mcp_server.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/mcp.html#scitex_notification._mcp.available_backends_handler"><code class="docutils literal notranslate"><span class="pre">available_backends_handler()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/mcp.html#scitex_notification._mcp.get_config_handler"><code class="docutils literal notranslate"><span class="pre">get_config_handler()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/mcp.html#scitex_notification._mcp.get_tool_schemas"><code class="docutils literal notranslate"><span class="pre">get_tool_schemas()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/mcp.html#scitex_notification._mcp.list_backends_handler"><code class="docutils literal notranslate"><span class="pre">list_backends_handler()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/mcp.html#scitex_notification._mcp.notify_handler"><code class="docutils literal notranslate"><span class="pre">notify_handler()</span></code></a></li>
+</ul>
+</li>
+</ul>
 </div>
 </section>
-<section id="quick-example">
-<h2>Quick Example<a class="headerlink" href="#quick-example" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">scitex_notification</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">notify</span>
+<section id="quick-examples">
+<h2>Quick Examples<a class="headerlink" href="#quick-examples" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">scitex_notification</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">stxn</span>
 
-<span class="c1"># Send via default backend</span>
-<span class="n">notify</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;Training complete. Val loss: 0.042&quot;</span><span class="p">)</span>
+<span class="c1"># Simple alert — fallback: audio → emacs → matplotlib → playwright → email</span>
+<span class="n">stxn</span><span class="o">.</span><span class="n">alert</span><span class="p">(</span><span class="s2">&quot;Training complete. Val loss: 0.042&quot;</span><span class="p">)</span>
 
-<span class="c1"># Send via specific backend</span>
-<span class="n">notify</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;Job finished&quot;</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;email&quot;</span><span class="p">)</span>
+<span class="c1"># Specific backend</span>
+<span class="n">stxn</span><span class="o">.</span><span class="n">alert</span><span class="p">(</span><span class="s2">&quot;Job finished&quot;</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;email&quot;</span><span class="p">)</span>
 
-<span class="c1"># Notify on function completion</span>
-<span class="nd">@notify</span><span class="o">.</span><span class="n">on_complete</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;audio&quot;</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">train_model</span><span class="p">():</span>
-    <span class="o">...</span>  <span class="c1"># long-running computation</span>
+<span class="c1"># Escalate to phone call</span>
+<span class="n">stxn</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;Server is down — wake up!&quot;</span><span class="p">)</span>
+
+<span class="c1"># Send SMS</span>
+<span class="n">stxn</span><span class="o">.</span><span class="n">sms</span><span class="p">(</span><span class="s2">&quot;Build done!&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -162,7 +267,9 @@ scientific computations wherever you are.</p>
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quickstart.html" class="btn btn-neutral float-right" title="Quickstart" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 

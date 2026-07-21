@@ -1,0 +1,15 @@
+# CLI-audit dictionary overrides for scitex-notification.
+#
+# Read by `scitex-dev ecosystem audit-cli` (the §1 noun-verb checker). Words
+# listed here override the bundled catalog + Moby part-of-speech lookup for
+# THIS package only.
+#
+# `call` is a transitive verb in this CLI — `scitex-notification call
+# "<message>"` performs the action of phoning out, taking the message as its
+# required positional object (same shape the convention blesses for `verify
+# <SOURCE>` / `commit -m ...`). Moby tags "call" as both noun and verb, and
+# the resolved label landed on `noun`, so the §1 checker mistook the verb
+# leaf for a dangling noun. Declaring it here as a transitive verb is the
+# auditor's documented escape hatch.
+transitive_verbs:
+  - call

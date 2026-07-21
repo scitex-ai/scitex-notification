@@ -1,0 +1,12 @@
+ID: 2026Y-05M-07D-12h02m01s_yjnR
+PID: 356959
+START_DATETIME: 2026-05-07 12:02:01.474876
+FILE: /home/ywatanabe/proj/scitex-notification/examples/04_phone_call_demo.py
+SDIR_OUT: 
+    /home/ywatanabe/proj/scitex-notification/examples/04_phone_call_demo_out
+SDIR_RUN: 
+    /home/ywatanabe/proj/scitex-notification/examples/04_phone_call_demo_out/RUNNING/2026Y-05M-07D-12h02m01s_yjnR-main
+ARGS: {}
+EXIT_STATUS: 0
+END_DATETIME: 2026-05-07 12:02:07.839885
+RUN_DURATION: 00:00:06

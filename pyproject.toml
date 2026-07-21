@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scitex-notification"
-version = "0.2.5"
+version = "0.2.9"
 description = "Multi-backend notification system for SciTeX"
 readme = "README.md"
 license = "AGPL-3.0-only"
@@ -36,7 +36,7 @@ classifiers = [
 dependencies = [
     "click>=8.0",
     "scitex_dev",
-    "scitex-dev>=0.7.0",
+    "scitex-dev>=0.11.7",
 ]
 
 [project.optional-dependencies]
@@ -53,10 +53,13 @@ twilio = [
     "twilio>=8.0",
 ]
 dev = [
-    "pytest>=7.0",
-    "pytest-cov>=4.0",
+    "mcp>=1.0",
+    "playwright>=1.40",
     "pytest-asyncio",
+    "pytest-cov>=4.0",
+    "pytest>=7.0",
     "ruff",
+    "scitex-audio>=0.1.0",
 ]
 docs = [
     "sphinx>=7.0",
@@ -67,6 +70,8 @@ docs = [
 ]
 all = [
     "scitex-notification[audio]",
+    "scitex-notification[dev]",
+    "scitex-notification[docs]",
     "scitex-notification[mcp]",
     "scitex-notification[playwright]",
     "scitex-notification[twilio]",
@@ -75,7 +80,7 @@ all = [
 [project.scripts]
 scitex-notification = "scitex_notification._cli:main"
 
-[project.entry-points."scitex_linter.plugins"]
+[project.entry-points."scitex_dev.linter.plugins"]
 scitex_notification = "scitex_notification._linter_plugin:get_plugin"
 
 [project.entry-points."scitex_dev.docs"]

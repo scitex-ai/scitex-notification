@@ -6,16 +6,6 @@
 
 # SciTeX Notification (<code>scitex-notification</code>)
 
-<!-- scitex-badges:start -->
-[![PyPI](https://img.shields.io/pypi/v/scitex-notification.svg)](https://pypi.org/project/scitex-notification/)
-[![Python](https://img.shields.io/pypi/pyversions/scitex-notification.svg)](https://pypi.org/project/scitex-notification/)
-[![Tests](https://github.com/ywatanabe1989/scitex-notification/actions/workflows/test.yml/badge.svg)](https://github.com/ywatanabe1989/scitex-notification/actions/workflows/test.yml)
-[![Install Test](https://github.com/ywatanabe1989/scitex-notification/actions/workflows/install-test.yml/badge.svg)](https://github.com/ywatanabe1989/scitex-notification/actions/workflows/install-test.yml)
-[![Coverage](https://codecov.io/gh/ywatanabe1989/scitex-notification/graph/badge.svg)](https://codecov.io/gh/ywatanabe1989/scitex-notification)
-[![Docs](https://readthedocs.org/projects/scitex-notification/badge/?version=latest)](https://scitex-notification.readthedocs.io/en/latest/)
-[![License: AGPL v3](https://img.shields.io/badge/license-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-<!-- scitex-badges:end -->
-
 <p align="center">
   <a href="https://scitex.ai">
     <img src="docs/scitex-logo-blue-cropped.png" alt="SciTeX" width="400">
@@ -25,8 +15,20 @@
 <p align="center"><b>One-call alerting across 9 backends — audio, desktop, emacs, matplotlib, playwright, email, webhook, Telegram, Twilio.</b></p>
 
 <p align="center">
-  <a href="https://scitex-notification.readthedocs.io/">Full Documentation</a> · <code>pip install scitex-notification</code>
+  <a href="https://scitex-notification.readthedocs.io/">Full Documentation</a> · <code>uv pip install scitex-notification[all]</code>
 </p>
+
+<!-- scitex-badges:start -->
+<p align="center">
+  <a href="https://pypi.org/project/scitex-notification/"><img src="https://img.shields.io/pypi/v/scitex-notification.svg" alt="PyPI"></a>
+  <a href="https://pypi.org/project/scitex-notification/"><img src="https://img.shields.io/pypi/pyversions/scitex-notification.svg" alt="Python"></a>
+  <a href="https://github.com/ywatanabe1989/scitex-notification/actions/workflows/test.yml"><img src="https://github.com/ywatanabe1989/scitex-notification/actions/workflows/test.yml/badge.svg" alt="Tests"></a>
+  <a href="https://github.com/ywatanabe1989/scitex-notification/actions/workflows/install-test.yml"><img src="https://github.com/ywatanabe1989/scitex-notification/actions/workflows/install-test.yml/badge.svg" alt="Install Test"></a>
+  <a href="https://codecov.io/gh/ywatanabe1989/scitex-notification"><img src="https://codecov.io/gh/ywatanabe1989/scitex-notification/graph/badge.svg" alt="Coverage"></a>
+  <a href="https://scitex-notification.readthedocs.io/en/latest/"><img src="https://readthedocs.org/projects/scitex-notification/badge/?version=latest" alt="Docs"></a>
+  <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/license-AGPL_v3-blue.svg" alt="License: AGPL v3"></a>
+</p>
+<!-- scitex-badges:end -->
 
 ---
 
@@ -117,7 +119,7 @@ stxn.sms("Build finished")                          # Twilio SMS
 
 ## 4 Interfaces
 
-<details>
+<details open>
 <summary><strong>Python API</strong></summary>
 
 <br>
@@ -133,7 +135,7 @@ notification.sms("Build done!")                          # SMS via Twilio
 notification.available_backends()                        # list installed backends
 ```
 
-> **[Full API reference](https://scitex-notification.readthedocs.io/)**
+> **[Full API reference](https://scitex-notification.readthedocs.io/en/latest/api/scitex_notification.html)**
 
 </details>
 
@@ -151,7 +153,7 @@ scitex-notification backends                     # List available backends
 scitex-notification mcp list-tools              # List MCP tools
 ```
 
-> **[Full CLI reference](https://scitex-notification.readthedocs.io/)**
+> **[Full CLI reference](https://scitex-notification.readthedocs.io/en/latest/quickstart.html)**
 
 </details>
 
@@ -173,7 +175,7 @@ AI agents can send notifications and check system status autonomously.
 scitex-notification mcp start
 ```
 
-> **[Full MCP specification](https://scitex-notification.readthedocs.io/)**
+> **[Full MCP specification](https://scitex-notification.readthedocs.io/en/latest/api/scitex_notification._mcp.html)**
 
 </details>
 
@@ -275,6 +277,41 @@ export SCITEX_NOTIFICATION_TWILIO_TO=+XX-XXX-XXX-XXXX
 ```
 
 </details>
+
+## Architecture
+
+```
+scitex_notification/
+├── _alert.py              ← unified `alert()` with fallback chain
+├── _call.py / _sms.py     ← Twilio escalation entry points
+├── backends/              ← 9 pluggable backends
+│   ├── _audio.py          ← TTS via scitex-audio (SSH relay supported)
+│   ├── _desktop.py        ← notify-send / PowerShell
+│   ├── _emacs.py          ← emacsclient
+│   ├── _matplotlib.py     ← visual popup
+│   ├── _playwright.py     ← browser popup
+│   ├── _email.py          ← SMTP
+│   ├── _webhook.py        ← Slack / Discord / custom HTTP
+│   ├── _telegram.py       ← Telegram bot
+│   └── _twilio.py         ← phone call + SMS
+├── _config.py             ← env / yaml / fallback-order resolution
+├── _cli.py                ← `scitex-notification send / call / backends`
+└── _mcp/                  ← MCP server for AI agents
+```
+
+## Demo
+
+```python
+import scitex_notification as stxn
+
+stxn.alert("training complete")               # default fallback chain
+stxn.alert("OOM!", level="critical")          # escalates to phone/SMS
+stxn.call("server is down — wake up!")        # Twilio voice
+```
+
+<p align="center">
+  <img src="docs/called-take-your-time.png" alt="Audio → phone-call escalation" width="380">
+</p>
 
 ## Part of SciTeX
 
