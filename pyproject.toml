@@ -52,7 +52,7 @@ playwright = [
 twilio = [
     "twilio>=8.0",
 ]
-dev = [
+_dev = [
     "mcp>=1.0",
     "playwright>=1.40",
     "pytest-asyncio",
@@ -61,7 +61,7 @@ dev = [
     "ruff",
     "scitex-audio>=0.1.0",
 ]
-docs = [
+_docs = [
     "sphinx>=7.0",
     "sphinx-rtd-theme>=2.0",
     "myst-parser>=2.0",
