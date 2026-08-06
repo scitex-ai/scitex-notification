@@ -40,6 +40,7 @@ from ._env_loader import load_scitex_notification_env as _load_env
 
 _load_env()
 
+from . import _emit_log
 from ._backends import NotifyLevel as _AlertLevel
 from ._backends import available_backends as _available_backends
 from ._backends import get_backend as _get_backend
@@ -176,13 +177,46 @@ async def alert_async(
     for name in backends:
         if name not in available:
             continue
+        # AUDIT BEFORE SENDING, not after. A notification that costs money
+        # (twilio call/sms) must be attributable even if the send crashes or
+        # hangs mid-flight -- 2026-08-06 the operator was being phoned and
+        # nothing anywhere recorded which process did it. An `attempt` with no
+        # matching `result` is itself the signal that something died mid-send.
+        _emit_log.record(
+            phase="attempt",
+            backend=name,
+            level=lvl,
+            title=title,
+            message=message,
+            extra={"to_number": kwargs["to_number"]}
+            if kwargs.get("to_number")
+            else None,
+        )
         try:
             b = _get_backend(name)
             result = await b.send(message, title=title, level=lvl, **kwargs)
+            _emit_log.record(
+                phase="result",
+                backend=name,
+                level=lvl,
+                title=title,
+                message=message,
+                ok=bool(result.success),
+                error=result.error,
+            )
             if result.success:
                 return True
             last_error = result.error or last_error
         except Exception as e:
+            _emit_log.record(
+                phase="result",
+                backend=name,
+                level=lvl,
+                title=title,
+                message=message,
+                ok=False,
+                error=str(e),
+            )
             last_error = str(e)
 
     # Fail loud for the explicit single-backend case: the one channel the
