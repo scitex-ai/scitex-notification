@@ -7,14 +7,24 @@ regeneration; add hand-written cases below the second sentinel.
 This test imports every cross-package module that 'scitex-notification' references
 in its source tree. Two outcomes:
 
-- Module installed AND import succeeds → test PASSES.
+- Module installed AND import succeeds -> test PASSES.
 - Module installed BUT import fails (e.g. internal rename like
-  `scitex_io._load_cache` → `scitex_io._loading._load_cache`) →
+  `scitex_io._load_cache` -> `scitex_io._loading._load_cache`) ->
   test FAILS loudly.
-- Module NOT installed (peer standalone absent in the CI env) →
-  test is SKIPPED via `pytest.importorskip`. The umbrella's CI
-  (which installs every peer) catches cross-package renames.
+- Module NOT installed (peer standalone absent in the CI env) ->
+  test is SKIPPED.
+
+The skip decision is taken on the ROOT package only
+(`pytest.importorskip("scitex_io")`); the FULL dotted path is then
+hard-imported with `importlib.import_module`. `importorskip` on the full
+path would swallow a rename as a skip -- the exact failure this gate
+exists to catch -- because a missing submodule and a missing peer both
+raise ModuleNotFoundError. Splitting the two calls keeps a lean install
+(peer legitimately absent) skipping while a rename inside an installed
+peer fails loudly.
 """
+
+import importlib
 
 import pytest
 
@@ -35,9 +45,11 @@ def test_cross_package_import_succeeds(module_name):
     """Importing scitex-notification's declared cross-package dependency must succeed."""
     # Arrange
     target = module_name
+    root = target.split(".")[0]
 
     # Act
-    module = pytest.importorskip(target)
+    pytest.importorskip(root)
+    module = importlib.import_module(target)
 
     # Assert
     assert module is not None
