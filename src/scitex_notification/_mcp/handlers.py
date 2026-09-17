@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import inspect
 from datetime import datetime
 from typing import Optional
 
@@ -18,6 +19,24 @@ __all__ = [
     "skills_list_handler",
     "skills_get_handler",
 ]
+
+
+def _constructor_kwargs(backend_cls: type, kwargs: dict) -> dict:
+    """Return only the kwargs that ``backend_cls.__init__`` actually accepts.
+
+    The MCP layer receives every tool argument as one flat mapping, but a
+    backend constructor is strict — ``WebhookBackend(url=None)``,
+    ``TelegramBackend(bot_token, chat_id)``. Forwarding a send-level argument
+    (``idempotency_key``, ``image_path``, ``voice_path``, ``document_path``)
+    into construction raises ``TypeError`` BEFORE ``send()`` runs, so the
+    notification is never attempted and the caller gets a generic failure with
+    no delivery receipt. Send-level arguments belong to ``send()``, which takes
+    ``**kwargs``.
+    """
+    params = inspect.signature(backend_cls.__init__).parameters
+    if any(p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values()):
+        return dict(kwargs)
+    return {k: v for k, v in kwargs.items() if k in params and k != "self"}
 
 
 async def notify_handler(
@@ -64,7 +83,10 @@ async def notify_handler(
                     )
                     continue
 
-                b = get_backend(backend_name, **kwargs)
+                b = get_backend(
+                    backend_name,
+                    **_constructor_kwargs(BACKENDS[backend_name], kwargs),
+                )
                 result = await b.send(
                     message,
                     title=title,
