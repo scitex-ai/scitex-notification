@@ -78,6 +78,9 @@ async def notify_handler(
                         "backend": backend_name,
                         "success": result.success,
                         "error": result.error,
+                        "error_code": result.error_code,
+                        "delivery_id": result.delivery_id,
+                        "idempotency_key": result.idempotency_key,
                         "details": result.details,
                     }
                 )

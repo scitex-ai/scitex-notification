@@ -36,6 +36,11 @@ def _getenv_telegram(*names: str) -> str:
     return ""
 
 
+def _redact_token(value: str, token: str) -> str:
+    """Remove a bot credential from an error before it crosses the API boundary."""
+    return value.replace(token, "<redacted>") if token else value
+
+
 class TelegramBackend(BaseNotifyBackend):
     """Telegram message notification backend."""
 
@@ -63,6 +68,7 @@ class TelegramBackend(BaseNotifyBackend):
         level: NotifyLevel = NotifyLevel.INFO,
         **kwargs,
     ) -> NotifyResult:
+        idempotency_key = kwargs.get("idempotency_key")
         try:
             chat_id = kwargs.get("chat_id") or self.chat_id
             image_path = kwargs.get("image_path")
@@ -80,7 +86,7 @@ class TelegramBackend(BaseNotifyBackend):
 
             # Send image if provided
             if image_path and Path(image_path).exists():
-                await loop.run_in_executor(
+                response = await loop.run_in_executor(
                     None,
                     lambda: _send_photo(
                         self.bot_token, chat_id, image_path, full_message
@@ -88,7 +94,7 @@ class TelegramBackend(BaseNotifyBackend):
                 )
             # Send voice note if provided
             elif voice_path and Path(voice_path).exists():
-                await loop.run_in_executor(
+                response = await loop.run_in_executor(
                     None,
                     lambda: _send_voice(
                         self.bot_token, chat_id, voice_path, full_message
@@ -96,7 +102,7 @@ class TelegramBackend(BaseNotifyBackend):
                 )
             # Send document if provided
             elif document_path and Path(document_path).exists():
-                await loop.run_in_executor(
+                response = await loop.run_in_executor(
                     None,
                     lambda: _send_document(
                         self.bot_token, chat_id, document_path, full_message
@@ -104,25 +110,39 @@ class TelegramBackend(BaseNotifyBackend):
                 )
             else:
                 # Text-only message
-                await loop.run_in_executor(
+                response = await loop.run_in_executor(
                     None,
                     lambda: _send_message(self.bot_token, chat_id, full_message),
                 )
 
+            provider_result = response.get("result", {}) if response else {}
+            delivery_id = provider_result.get("message_id")
             return NotifyResult(
                 success=True,
                 backend=self.name,
                 message=message,
                 timestamp=datetime.now().isoformat(),
-                details={"chat_id": chat_id},
+                details={
+                    "chat_id": str(chat_id),
+                    "idempotency_enforced": False,
+                },
+                delivery_id=str(delivery_id) if delivery_id is not None else None,
+                idempotency_key=idempotency_key,
             )
         except Exception as e:
+            error_code = (
+                "configuration_error"
+                if isinstance(e, ValueError)
+                else "delivery_error"
+            )
             return NotifyResult(
                 success=False,
                 backend=self.name,
                 message=message,
                 timestamp=datetime.now().isoformat(),
-                error=str(e),
+                error=_redact_token(str(e), self.bot_token),
+                idempotency_key=idempotency_key,
+                error_code=error_code,
             )
 
 

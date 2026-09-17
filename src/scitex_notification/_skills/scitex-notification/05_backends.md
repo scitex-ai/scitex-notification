@@ -137,6 +137,22 @@ stxn.alert(
 
 Text messages are truncated at 4096 chars (Telegram limit).
 
+Successful sends return a neutral delivery receipt. For Telegram,
+`delivery_id` is the Bot API `message_id`. A caller-supplied
+`idempotency_key` is preserved for end-to-end correlation; the receipt reports
+`idempotency_enforced: false` because Telegram does not provide native send
+deduplication.
+
+The canonical CLI surface uses the same backend:
+
+```bash
+scitex-notification send "Agent finished" --backend telegram
+```
+
+This backend is outbound notification delivery. Bidirectional agent ingress,
+acknowledgement, queueing, and steering belong to the agent communication
+gateway rather than the notification backend.
+
 `is_available()`: returns `True` if both `bot_token` and `chat_id` are set.
 
 ## twilio

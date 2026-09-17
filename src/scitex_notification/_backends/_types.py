@@ -31,6 +31,9 @@ class NotifyResult:
     timestamp: str
     error: Optional[str] = None
     details: Optional[dict] = None
+    delivery_id: Optional[str] = None
+    idempotency_key: Optional[str] = None
+    error_code: Optional[str] = None
 
 
 class BaseNotifyBackend(ABC):
