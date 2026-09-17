@@ -1,58 +1,61 @@
 #!/usr/bin/env python3
+
 """Tests for the MCP notify handler's argument routing.
 
 The `notify` tool schema declares send-level arguments (``idempotency_key``)
 next to constructor-level ones. ``notify_handler`` receives them all as one flat
 mapping and forwarded that whole mapping into BOTH the backend constructor and
 ``send()``. Every backend constructor is strict — ``WebhookBackend(url=None)``,
-``TelegramBackend(bot_token, chat_id)`` — so any send-level argument made
-construction raise ``TypeError`` before ``send()`` was ever called: the
+``TelegramBackend(bot_token, chat_id)`` — so any send-level argument raised
+``TypeError`` inside construction and ``send()`` was never called: the
 notification silently never happened and the caller got a generic failure with
 no delivery receipt.
+
+No mocks (repo no-mocks policy — STX-NM002 / audit rule PA-306): every case here
+drives the real handler, the real backend registry and the real backend classes.
+The fake Bot API transport is a hand-rolled callable injected through the
+backend's documented ``transports`` seam, and the absent Telegram credentials the
+config-error case needs come from a yield fixture that unsets the two env vars
+and restores them, not from monkeypatch.
 """
 
 from __future__ import annotations
 
+import os
+
 import pytest
 
-from scitex_notification._backends import BACKENDS, WebhookBackend
+from scitex_notification._backends import WebhookBackend
 from scitex_notification._backends._telegram import TelegramBackend
-from scitex_notification._backends._types import (
-    BaseNotifyBackend,
-    NotifyLevel,
-    NotifyResult,
-)
 from scitex_notification._mcp.handlers import _constructor_kwargs, notify_handler
 
+_TELEGRAM_ENV_VARS = (
+    "SCITEX_NOTIFICATION_TELEGRAM_TOKEN",
+    "SCITEX_NOTIFICATION_TELEGRAM_CHAT_ID",
+)
 
-class _RecordingBackend(BaseNotifyBackend):
-    """Backend with a strict constructor that records what reached it."""
 
-    name = "recording"
-    constructed_with: dict = {}
-    sent_with: dict = {}
+@pytest.fixture
+def telegram_credentials_absent():
+    """Run with Telegram credentials unset, restoring the exact env after."""
+    saved = {name: os.environ.pop(name, None) for name in _TELEGRAM_ENV_VARS}
+    try:
+        yield
+    finally:
+        for name, value in saved.items():
+            if value is not None:
+                os.environ[name] = value
 
-    def __init__(self, recipient=None):
-        type(self).constructed_with = {"recipient": recipient}
 
-    def is_available(self) -> bool:
-        return True
+class RecordingTransport:
+    """Hand-rolled fake Bot API transport: records what it was asked to send."""
 
-    async def send(
-        self,
-        message: str,
-        title=None,
-        level: NotifyLevel = NotifyLevel.INFO,
-        **kwargs,
-    ) -> NotifyResult:
-        type(self).sent_with = dict(kwargs)
-        return NotifyResult(
-            success=True,
-            backend=self.name,
-            message=message,
-            timestamp="2026-09-16T00:00:00",
-            idempotency_key=kwargs.get("idempotency_key"),
-        )
+    def __init__(self):
+        self.calls: list[tuple] = []
+
+    def __call__(self, token, chat_id, text, caption=""):
+        self.calls.append((token, chat_id, text))
+        return {"ok": True, "result": {"message_id": 456}}
 
 
 class TestConstructorKwargs:
@@ -93,62 +96,43 @@ class TestConstructorKwargs:
 
 class TestNotifyHandlerArgumentRouting:
     @pytest.mark.asyncio
-    async def test_idempotency_key_reaches_send_and_not_the_constructor(
-        self, monkeypatch
-    ):
+    async def test_idempotency_key_no_longer_breaks_backend_construction(self):
         # Arrange
-        monkeypatch.setitem(BACKENDS, "recording", _RecordingBackend)
-
+        # Regression: this returned "WebhookBackend.__init__() got an unexpected
+        # keyword argument 'idempotency_key'" and send() was never reached. An
+        # empty url is a real config-error input, so the case needs no network.
         # Act
         out = await notify_handler(
-            message="boundary probe",
-            backend="recording",
-            recipient="ops",
-            idempotency_key="run-1",
+            message="boundary probe", backend="webhook", url="", idempotency_key="run-1"
+        )
+
+        # Assert
+        assert (out["results"][0]["success"], out["results"][0]["error"]) == (
+            False,
+            "No webhook URL configured",
+        )
+
+    @pytest.mark.asyncio
+    async def test_idempotency_key_reaches_send_and_returns_in_the_receipt(
+        self, telegram_credentials_absent
+    ):
+        # Arrange
+        # Act
+        out = await notify_handler(
+            message="boundary probe", backend="telegram", idempotency_key="run-1"
         )
 
         # Assert
         assert (
-            _RecordingBackend.constructed_with,
-            _RecordingBackend.sent_with.get("idempotency_key"),
-            out["success_count"],
-        ) == ({"recipient": "ops"}, "run-1", 1)
+            out["results"][0]["success"],
+            out["results"][0]["error_code"],
+            out["results"][0]["idempotency_key"],
+        ) == (False, "configuration_error", "run-1")
 
     @pytest.mark.asyncio
-    async def test_webhook_construction_accepts_idempotency_key(self, monkeypatch):
+    async def test_injected_transport_receipts_the_provider_message_id(self):
         # Arrange
-        # Regression: this raised TypeError — "unexpected keyword argument
-        # 'idempotency_key'" — so send() was never reached.
-        def _injected_transport_failure(*_args, **_kwargs):
-            raise RuntimeError("injected transport failure")
-
-        monkeypatch.setattr(
-            "scitex_notification._backends._webhook.urllib.request.urlopen",
-            _injected_transport_failure,
-        )
-
-        # Act
-        out = await notify_handler(
-            message="boundary probe",
-            backend="webhook",
-            url="https://example.invalid/hook",
-            idempotency_key="run-1",
-        )
-
-        # Assert
-        entry = out["results"][0]
-        assert (entry["success"], entry["error"]) == (
-            False,
-            "injected transport failure",
-        )
-
-    @pytest.mark.asyncio
-    async def test_telegram_receipt_fields_surface_in_the_mcp_result(self, monkeypatch):
-        # Arrange
-        monkeypatch.setattr(
-            "scitex_notification._backends._telegram._send_message",
-            lambda token, chat_id, text: {"ok": True, "result": {"message_id": 456}},
-        )
+        transport = RecordingTransport()
 
         # Act
         out = await notify_handler(
@@ -156,6 +140,7 @@ class TestNotifyHandlerArgumentRouting:
             backend="telegram",
             bot_token="test-token",
             chat_id="123",
+            transports={"message": transport},
             idempotency_key="run-1",
         )
 
@@ -165,20 +150,20 @@ class TestNotifyHandlerArgumentRouting:
             entry["success"],
             entry["delivery_id"],
             entry["idempotency_key"],
-            entry["error_code"],
-        ) == (True, "456", "run-1", None)
+            transport.calls,
+        ) == (True, "456", "run-1", [("test-token", "123", "boundary probe")])
 
     @pytest.mark.asyncio
-    async def test_missing_idempotency_key_leaves_receipt_field_empty(self, monkeypatch):
+    async def test_missing_idempotency_key_leaves_the_receipt_field_empty(self):
         # Arrange
-        monkeypatch.setitem(BACKENDS, "recording", _RecordingBackend)
-
         # Act
-        out = await notify_handler(message="boundary probe", backend="recording")
+        out = await notify_handler(message="boundary probe", backend="webhook", url="")
 
         # Assert
-        entry = out["results"][0]
-        assert (entry["success"], entry["idempotency_key"]) == (True, None)
+        assert (
+            out["results"][0]["success"],
+            out["results"][0]["idempotency_key"],
+        ) == (False, None)
 
 
 if __name__ == "__main__":

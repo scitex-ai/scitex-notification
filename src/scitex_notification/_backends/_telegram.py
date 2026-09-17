@@ -50,6 +50,7 @@ class TelegramBackend(BaseNotifyBackend):
         self,
         bot_token: Optional[str] = None,
         chat_id: Optional[str] = None,
+        transports: Optional[dict] = None,
     ):
         self.bot_token = bot_token or _getenv_telegram(
             "SCITEX_NOTIFICATION_TELEGRAM_TOKEN",
@@ -57,6 +58,17 @@ class TelegramBackend(BaseNotifyBackend):
         self.chat_id = chat_id or _getenv_telegram(
             "SCITEX_NOTIFICATION_TELEGRAM_CHAT_ID",
         )
+        # Transport seam. The four Bot API callables are injectable, so a caller
+        # (or a test) can drive the delivery-receipt contract without reaching
+        # the network. The defaults ARE the real stdlib-urllib transports: this
+        # adds an injection point, it does not put a fake on the production path.
+        self.transports = {
+            "message": _send_message,
+            "photo": _send_photo,
+            "voice": _send_voice,
+            "document": _send_document,
+            **(transports or {}),
+        }
 
     def is_available(self) -> bool:
         return bool(self.bot_token and self.chat_id)
@@ -88,7 +100,7 @@ class TelegramBackend(BaseNotifyBackend):
             if image_path and Path(image_path).exists():
                 response = await loop.run_in_executor(
                     None,
-                    lambda: _send_photo(
+                    lambda: self.transports["photo"](
                         self.bot_token, chat_id, image_path, full_message
                     ),
                 )
@@ -96,7 +108,7 @@ class TelegramBackend(BaseNotifyBackend):
             elif voice_path and Path(voice_path).exists():
                 response = await loop.run_in_executor(
                     None,
-                    lambda: _send_voice(
+                    lambda: self.transports["voice"](
                         self.bot_token, chat_id, voice_path, full_message
                     ),
                 )
@@ -104,7 +116,7 @@ class TelegramBackend(BaseNotifyBackend):
             elif document_path and Path(document_path).exists():
                 response = await loop.run_in_executor(
                     None,
-                    lambda: _send_document(
+                    lambda: self.transports["document"](
                         self.bot_token, chat_id, document_path, full_message
                     ),
                 )
@@ -112,7 +124,9 @@ class TelegramBackend(BaseNotifyBackend):
                 # Text-only message
                 response = await loop.run_in_executor(
                     None,
-                    lambda: _send_message(self.bot_token, chat_id, full_message),
+                    lambda: self.transports["message"](
+                        self.bot_token, chat_id, full_message
+                    ),
                 )
 
             provider_result = response.get("result", {}) if response else {}
