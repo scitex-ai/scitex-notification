@@ -25,7 +25,7 @@ import os
 
 import pytest
 
-from scitex_notification._backends import WebhookBackend
+from scitex_notification._backends import DesktopBackend, WebhookBackend, get_backend
 from scitex_notification._backends._telegram import TelegramBackend
 from scitex_notification._mcp.handlers import _constructor_kwargs, notify_handler
 
@@ -78,6 +78,23 @@ class TestConstructorKwargs:
 
         # Assert
         assert accepted == {"bot_token": "t", "chat_id": "1"}
+
+    def test_drops_send_level_arguments_for_a_backend_without_its_own_init(self):
+        # Arrange
+        # Regression: DesktopBackend declares no __init__ of its own, so
+        # inspecting __init__ resolved to object.__init__, whose **kwargs read
+        # as "accepts anything". The key then leaked into
+        # Backend(idempotency_key=...) -> "DesktopBackend() takes no arguments",
+        # the same TypeError this seam exists to prevent, one inheritance level
+        # down: send() was never reached and no receipt was produced.
+        kwargs = {"idempotency_key": "run-1", "image_path": "x.png"}
+
+        # Act
+        accepted = _constructor_kwargs(DesktopBackend, kwargs)
+        constructed = get_backend("desktop", **accepted)
+
+        # Assert
+        assert (accepted, type(constructed).__name__) == ({}, "DesktopBackend")
 
     def test_passes_everything_to_a_constructor_that_takes_kwargs(self):
         # Arrange

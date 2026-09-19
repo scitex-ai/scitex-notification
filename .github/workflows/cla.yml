@@ -25,4 +25,15 @@ jobs:
     uses: scitex-ai/.github/.github/workflows/cla.yml@main
     with:
       owner_allowlist: "bot*,ywatanabe1989,LLEmacs"
-    secrets: inherit
+    # NAMED SECRET, not `secrets: inherit`. This caller fires on
+    # `issue_comment` and `pull_request_target`, both of which an
+    # UNAUTHENTICATED outsider can trigger on a public repo, so `inherit`
+    # would forward EVERY secret this repository holds into a job a stranger
+    # caused to run -- on the shared, persistent self-hosted runner the
+    # callee may target. Neither file reveals that alone: the caller names no
+    # `runs-on`, so the destination lives in the callee. Pass ONLY the one
+    # secret the callee declares (`GH_PERSONAL_ACCESS_TOKEN`, required).
+    # Audit rule PS-224 flags the `inherit` form; `inherit` is not a
+    # convenience here, it is the vulnerability.
+    secrets:
+      GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}

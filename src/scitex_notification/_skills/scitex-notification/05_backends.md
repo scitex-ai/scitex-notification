@@ -184,33 +184,12 @@ print(result.success, result.details)
 
 ## BaseNotifyBackend
 
-```python
-class BaseNotifyBackend(ABC):
-    name: str = "base"
-
-    @abstractmethod
-    async def send(
-        self,
-        message: str,
-        title: Optional[str] = None,
-        level: NotifyLevel = NotifyLevel.INFO,
-        **kwargs,
-    ) -> NotifyResult: ...
-
-    @abstractmethod
-    def is_available(self) -> bool: ...
-```
+Every backend subclasses `BaseNotifyBackend` and implements two members:
+`async send(message, title=None, level=NotifyLevel.INFO, **kwargs) -> NotifyResult`
+and `is_available() -> bool`. `name` supplies the registry key.
 
 ## NotifyResult / NotifyLevel
 
-```python
-@dataclass
-class NotifyResult:
-    success: bool; backend: str; message: str
-    timestamp: str            # ISO 8601
-    error: Optional[str] = None
-    details: Optional[dict] = None
-
-class NotifyLevel(Enum):
-    INFO = "info"; WARNING = "warning"; ERROR = "error"; CRITICAL = "critical"
-```
+`NotifyResult(success: bool, backend: str, message: str, timestamp: str — ISO 8601,
+error: str | None = None, details: dict | None = None)`.
+`NotifyLevel` = `INFO | WARNING | ERROR | CRITICAL`.

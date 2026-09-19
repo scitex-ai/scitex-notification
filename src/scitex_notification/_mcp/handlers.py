@@ -32,11 +32,20 @@ def _constructor_kwargs(backend_cls: type, kwargs: dict) -> dict:
     notification is never attempted and the caller gets a generic failure with
     no delivery receipt. Send-level arguments belong to ``send()``, which takes
     ``**kwargs``.
+
+    The CLASS signature is inspected, not ``__init__``'s: a backend that
+    defines no ``__init__`` of its own inherits ``object.__init__``, whose
+    ``(self, /, *args, **kwargs)`` reads as "accepts anything" and leaks every
+    send-level argument into ``Backend(idempotency_key=...)`` — the same
+    ``TypeError`` this seam exists to prevent, one inheritance level down
+    (``DesktopBackend`` is the live case). Inspecting the class resolves
+    through the MRO and excludes ``self``, so only a backend that genuinely
+    declares ``**kwargs`` receives the whole mapping.
     """
-    params = inspect.signature(backend_cls.__init__).parameters
+    params = inspect.signature(backend_cls).parameters
     if any(p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values()):
         return dict(kwargs)
-    return {k: v for k, v in kwargs.items() if k in params and k != "self"}
+    return {k: v for k, v in kwargs.items() if k in params}
 
 
 async def notify_handler(
