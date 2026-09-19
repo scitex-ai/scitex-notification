@@ -36,6 +36,11 @@ def _getenv_telegram(*names: str) -> str:
     return ""
 
 
+def _redact_token(value: str, token: str) -> str:
+    """Remove a bot credential from an error before it crosses the API boundary."""
+    return value.replace(token, "<redacted>") if token else value
+
+
 class TelegramBackend(BaseNotifyBackend):
     """Telegram message notification backend."""
 
@@ -45,6 +50,7 @@ class TelegramBackend(BaseNotifyBackend):
         self,
         bot_token: Optional[str] = None,
         chat_id: Optional[str] = None,
+        transports: Optional[dict] = None,
     ):
         self.bot_token = bot_token or _getenv_telegram(
             "SCITEX_NOTIFICATION_TELEGRAM_TOKEN",
@@ -52,6 +58,17 @@ class TelegramBackend(BaseNotifyBackend):
         self.chat_id = chat_id or _getenv_telegram(
             "SCITEX_NOTIFICATION_TELEGRAM_CHAT_ID",
         )
+        # Transport seam. The four Bot API callables are injectable, so a caller
+        # (or a test) can drive the delivery-receipt contract without reaching
+        # the network. The defaults ARE the real stdlib-urllib transports: this
+        # adds an injection point, it does not put a fake on the production path.
+        self.transports = {
+            "message": _send_message,
+            "photo": _send_photo,
+            "voice": _send_voice,
+            "document": _send_document,
+            **(transports or {}),
+        }
 
     def is_available(self) -> bool:
         return bool(self.bot_token and self.chat_id)
@@ -63,6 +80,7 @@ class TelegramBackend(BaseNotifyBackend):
         level: NotifyLevel = NotifyLevel.INFO,
         **kwargs,
     ) -> NotifyResult:
+        idempotency_key = kwargs.get("idempotency_key")
         try:
             chat_id = kwargs.get("chat_id") or self.chat_id
             image_path = kwargs.get("image_path")
@@ -80,49 +98,65 @@ class TelegramBackend(BaseNotifyBackend):
 
             # Send image if provided
             if image_path and Path(image_path).exists():
-                await loop.run_in_executor(
+                response = await loop.run_in_executor(
                     None,
-                    lambda: _send_photo(
+                    lambda: self.transports["photo"](
                         self.bot_token, chat_id, image_path, full_message
                     ),
                 )
             # Send voice note if provided
             elif voice_path and Path(voice_path).exists():
-                await loop.run_in_executor(
+                response = await loop.run_in_executor(
                     None,
-                    lambda: _send_voice(
+                    lambda: self.transports["voice"](
                         self.bot_token, chat_id, voice_path, full_message
                     ),
                 )
             # Send document if provided
             elif document_path and Path(document_path).exists():
-                await loop.run_in_executor(
+                response = await loop.run_in_executor(
                     None,
-                    lambda: _send_document(
+                    lambda: self.transports["document"](
                         self.bot_token, chat_id, document_path, full_message
                     ),
                 )
             else:
                 # Text-only message
-                await loop.run_in_executor(
+                response = await loop.run_in_executor(
                     None,
-                    lambda: _send_message(self.bot_token, chat_id, full_message),
+                    lambda: self.transports["message"](
+                        self.bot_token, chat_id, full_message
+                    ),
                 )
 
+            provider_result = response.get("result", {}) if response else {}
+            delivery_id = provider_result.get("message_id")
             return NotifyResult(
                 success=True,
                 backend=self.name,
                 message=message,
                 timestamp=datetime.now().isoformat(),
-                details={"chat_id": chat_id},
+                details={
+                    "chat_id": str(chat_id),
+                    "idempotency_enforced": False,
+                },
+                delivery_id=str(delivery_id) if delivery_id is not None else None,
+                idempotency_key=idempotency_key,
             )
         except Exception as e:
+            error_code = (
+                "configuration_error"
+                if isinstance(e, ValueError)
+                else "delivery_error"
+            )
             return NotifyResult(
                 success=False,
                 backend=self.name,
                 message=message,
                 timestamp=datetime.now().isoformat(),
-                error=str(e),
+                error=_redact_token(str(e), self.bot_token),
+                idempotency_key=idempotency_key,
+                error_code=error_code,
             )
 
 

@@ -18,6 +18,7 @@ _BACKEND_CHOICES = [
     "matplotlib",
     "playwright",
     "email",
+    "telegram",
     "twilio",
     "desktop",
     "webhook",

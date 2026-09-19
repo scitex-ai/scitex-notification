@@ -199,6 +199,17 @@ def test_send_dry_run_with_backend_emits_dry_run_marker(runner):
     assert "dry-run" in result.output
 
 
+def test_send_dry_run_accepts_telegram_backend(runner):
+    # Arrange
+    args = ["send", "Agent finished", "--dry-run", "--backend", "telegram"]
+
+    # Act
+    result = runner.invoke(cli, args)
+
+    # Assert
+    assert result.exit_code == 0
+
+
 def test_send_dry_run_with_level_exits_zero(runner):
     """send --dry-run --level error should exit 0."""
     # Arrange
