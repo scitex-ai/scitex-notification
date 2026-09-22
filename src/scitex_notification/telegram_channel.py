@@ -40,7 +40,11 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+import scitex_logging as slogging
+
 from ._env_loader import load_scitex_notification_env as _load_env
+
+log = slogging.getLogger(__name__)
 
 _load_env()
 
@@ -365,8 +369,9 @@ def main():
     if not MCP_AVAILABLE:
         import sys
 
-        print("Telegram channel requires the 'mcp' package.")
-        print("Install with: pip install mcp")
+        # PS-220: diagnostics via scitex-logging (stderr), not print.
+        log.error("Telegram channel requires the 'mcp' package.")
+        log.error("Install with: pip install mcp")
         sys.exit(1)
 
     server = TelegramChannelServer()
