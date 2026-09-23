@@ -20,13 +20,16 @@
 
 <!-- scitex-badges:start -->
 <p align="center">
-  <a href="https://pypi.org/project/scitex-notification/"><img src="https://img.shields.io/pypi/v/scitex-notification.svg" alt="PyPI"></a>
-  <a href="https://pypi.org/project/scitex-notification/"><img src="https://img.shields.io/pypi/pyversions/scitex-notification.svg" alt="Python"></a>
-  <a href="https://github.com/ywatanabe1989/scitex-notification/actions/workflows/test.yml"><img src="https://github.com/ywatanabe1989/scitex-notification/actions/workflows/test.yml/badge.svg" alt="Tests"></a>
-  <a href="https://github.com/ywatanabe1989/scitex-notification/actions/workflows/install-test.yml"><img src="https://github.com/ywatanabe1989/scitex-notification/actions/workflows/install-test.yml/badge.svg" alt="Install Test"></a>
-  <a href="https://codecov.io/gh/ywatanabe1989/scitex-notification"><img src="https://codecov.io/gh/ywatanabe1989/scitex-notification/graph/badge.svg" alt="Coverage"></a>
-  <a href="https://scitex-notification.readthedocs.io/en/latest/"><img src="https://readthedocs.org/projects/scitex-notification/badge/?version=latest" alt="Docs"></a>
-  <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/license-AGPL_v3-blue.svg" alt="License: AGPL v3"></a>
+  <a href="https://pypi.org/project/scitex-notification/"><img src="https://img.shields.io/pypi/v/scitex-notification?label=pypi" alt="pypi"></a>
+  <a href="https://pypi.org/project/scitex-notification/"><img src="https://img.shields.io/pypi/pyversions/scitex-notification?label=python" alt="python"></a>
+  <a href="https://scitex-notification.readthedocs.io/en/latest/"><img src="https://img.shields.io/github/actions/workflow/status/ywatanabe1989/scitex-notification/ci.yml?branch=develop&label=docs" alt="docs"></a>
+  <a href="https://scitex-notification.readthedocs.io/en/latest/"><img src="https://img.shields.io/readthedocs/scitex-notification?label=docs" alt="docs"></a>
+</p>
+<p align="center">
+  <a href="https://github.com/ywatanabe1989/scitex-notification/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ywatanabe1989/scitex-notification/ci.yml?branch=develop&label=tests" alt="tests"></a>
+  <a href="https://github.com/ywatanabe1989/scitex-notification/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ywatanabe1989/scitex-notification/ci.yml?branch=develop&label=install-check" alt="install-check"></a>
+  <a href="https://github.com/ywatanabe1989/scitex-notification/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ywatanabe1989/scitex-notification/ci.yml?branch=develop&label=quality" alt="quality"></a>
+  <a href="https://codecov.io/gh/ywatanabe1989/scitex-notification"><img src="https://img.shields.io/codecov/c/github/ywatanabe1989/scitex-notification/develop?label=cov" alt="cov"></a>
 </p>
 <!-- scitex-badges:end -->
 
@@ -66,10 +69,15 @@ When an AI agent needs your attention — even while you sleep — it can escala
 
 <p align="center">
   <img src="docs/called-take-your-time.png" alt="Agent escalation workflow in terminal" width="420">
-  &nbsp;&nbsp;&nbsp;
+</p>
+
+<sub><b>Figure 1.</b> Claude Code terminal showing audio → phone call escalation after 7 consecutive auditory feedbacks with no response from the user.</sub>
+
+<p align="center">
   <img src="docs/scitex-alert.png" alt="SciTeX Alert — phone call history" height="280">
 </p>
-<p align="center"><em>Fig. 1: Left — Claude Code terminal showing audio → phone call escalation after 7 consecutive auditory feedback but with no response from the user. Right — iPhone receiving repeated "SciTeX Alert" calls from the AI agent.</em></p>
+
+<sub><b>Figure 2.</b> iPhone receiving repeated "SciTeX Alert" calls from the AI agent.</sub>
 
 > **Penetrating iPhone Silent Mode**:
 > 1. **Emergency Bypass (most reliable)**: Save your Twilio number as a contact → Ringtone → enable **Emergency Bypass**. All calls ring regardless of Focus/Silent mode.
@@ -89,23 +97,6 @@ This enables a 24/7 development workflow: the agent works autonomously, speaks p
 
 </details>
 
-## Installation
-
-Requires Python >= 3.10.
-
-```bash
-pip install scitex-notification
-```
-
-Install with optional backends:
-
-```bash
-pip install "scitex-notification[audio]"    # audio alerts via scitex-audio
-pip install "scitex-notification[twilio]"   # SMS via Twilio
-pip install "scitex-notification[mcp]"      # MCP server for AI agents
-pip install "scitex-notification[all]"      # everything
-```
-
 ## Quickstart
 
 ```python
@@ -116,6 +107,60 @@ stxn.alert("Critical error", level="critical")      # may escalate to phone/SMS
 stxn.call("Server is down — wake up!")              # Twilio phone
 stxn.sms("Build finished")                          # Twilio SMS
 ```
+
+## Demo
+
+```python
+import scitex_notification as stxn
+
+stxn.alert("training complete")               # default fallback chain
+stxn.alert("OOM!", level="critical")          # escalates to phone/SMS
+stxn.call("server is down — wake up!")        # Twilio voice
+```
+
+<p align="center">
+  <img src="docs/called-take-your-time.png" alt="Audio → phone-call escalation" width="380">
+</p>
+
+<sub><b>Figure 3.</b> Audio → phone-call escalation demo: a spoken alert followed by a Twilio voice call.</sub>
+
+## Installation
+
+```bash
+uv pip install "scitex-notification[all]"
+```
+
+Requires Python >= 3.10.
+
+<details>
+<summary>Per-backend extras</summary>
+
+```bash
+uv pip install "scitex-notification[audio]"    # audio alerts via scitex-audio
+uv pip install "scitex-notification[twilio]"   # SMS via Twilio
+uv pip install "scitex-notification[mcp]"      # MCP server for AI agents
+uv pip install "scitex-notification[all]"      # everything
+```
+
+</details>
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A["stxn.alert(msg)"] --> B{"fallback chain"}
+    B --> C["audio TTS"]
+    C --> D["desktop"]
+    D --> E["emacs"]
+    E --> F["matplotlib"]
+    F --> G["playwright"]
+    G --> H["email / webhook"]
+    B -- "level=critical" --> I["Twilio call/SMS"]
+    J["AI agent"] --> K["MCP server"]
+    K --> A
+```
+
+<sub><b>Figure 4.</b> Alert routing: the fallback chain tries each live backend in order; critical levels escalate to Twilio phone/SMS, and AI agents enter through the MCP server.</sub>
 
 ## 4 Interfaces
 
@@ -277,41 +322,6 @@ export SCITEX_NOTIFICATION_TWILIO_TO=+XX-XXX-XXX-XXXX
 ```
 
 </details>
-
-## Architecture
-
-```
-scitex_notification/
-├── _alert.py              ← unified `alert()` with fallback chain
-├── _call.py / _sms.py     ← Twilio escalation entry points
-├── backends/              ← 9 pluggable backends
-│   ├── _audio.py          ← TTS via scitex-audio (SSH relay supported)
-│   ├── _desktop.py        ← notify-send / PowerShell
-│   ├── _emacs.py          ← emacsclient
-│   ├── _matplotlib.py     ← visual popup
-│   ├── _playwright.py     ← browser popup
-│   ├── _email.py          ← SMTP
-│   ├── _webhook.py        ← Slack / Discord / custom HTTP
-│   ├── _telegram.py       ← Telegram bot
-│   └── _twilio.py         ← phone call + SMS
-├── _config.py             ← env / yaml / fallback-order resolution
-├── _cli.py                ← `scitex-notification send / call / backends`
-└── _mcp/                  ← MCP server for AI agents
-```
-
-## Demo
-
-```python
-import scitex_notification as stxn
-
-stxn.alert("training complete")               # default fallback chain
-stxn.alert("OOM!", level="critical")          # escalates to phone/SMS
-stxn.call("server is down — wake up!")        # Twilio voice
-```
-
-<p align="center">
-  <img src="docs/called-take-your-time.png" alt="Audio → phone-call escalation" width="380">
-</p>
 
 ## Part of SciTeX
 

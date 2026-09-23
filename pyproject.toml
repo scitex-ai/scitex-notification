@@ -37,6 +37,10 @@ dependencies = [
     "click>=8.0",
     "scitex_dev",
     "scitex-dev>=0.11.7",
+    # Declared because package source logs via scitex-logging (PS-220):
+    # _env_loader.py, _notify_legacy.py, mcp_server.py and
+    # telegram_channel.py bind a slogging logger at module import time.
+    "scitex-logging",
 ]
 
 [project.optional-dependencies]
@@ -101,6 +105,10 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 asyncio_mode = "auto"
 addopts = "--cov=scitex_notification --cov-report=term-missing --cov-report=html:tests/coverage"
+markers = [
+    "smoke: fast subprocess CLI happy-path tests (<60s)",
+    "e2e: slow end-to-end workflows against real subsystems (RUN_E2E=1 to run)",
+]
 
 [tool.ruff]
 line-length = 88

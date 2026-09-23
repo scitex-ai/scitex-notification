@@ -17,6 +17,33 @@ import pytest
 from scitex_notification._backends._telegram import TelegramBackend
 from scitex_notification._backends._types import NotifyLevel
 
+_CREDENTIAL_VARS = (
+    "SCITEX_NOTIFICATION_TELEGRAM_TOKEN",
+    "SCITEX_NOTIFICATION_TELEGRAM_BOT_TOKEN",
+    "SCITEX_NOTIFICATION_TELEGRAM_CHAT_ID",
+)
+
+
+@pytest.fixture(autouse=True)
+def _blank_ambient_telegram_credentials():
+    """Constructor falls back to env creds; remove them so availability tests
+    observe the explicit arguments, not the operator's shell (PA isolation).
+    Deletion (not blanking): `_getenv_telegram` treats any non-empty string
+    as a credential. Explicit save/restore (no monkeypatch, PA-306)."""
+    import os
+
+    previous = {name: os.environ.get(name) for name in _CREDENTIAL_VARS}
+    for name in _CREDENTIAL_VARS:
+        os.environ.pop(name, None)
+    try:
+        yield
+    finally:
+        for name, value in previous.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+
 
 class FakeTelegramTransport:
     """Stand-in for the Bot API callables: records calls, returns a real shape.

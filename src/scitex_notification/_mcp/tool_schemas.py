@@ -6,13 +6,24 @@
 
 from __future__ import annotations
 
-import mcp.types as types
+# PS-233: `mcp` is an optional extra ([mcp]); keep this import guarded so a
+# lean `pip install scitex-notification` still imports. All other `mcp`
+# import sites are already guarded — this was the single unguarded site.
+try:
+    import mcp.types as types
+except ImportError:
+    types = None  # type: ignore[no-redef]
 
 __all__ = ["get_tool_schemas"]
 
 
-def get_tool_schemas() -> list[types.Tool]:
+def get_tool_schemas() -> list[types.Tool]:  # type: ignore[name-defined]
     """Return all tool schemas for the notification MCP server."""
+    if types is None:
+        raise ImportError(
+            "get_tool_schemas() needs the 'mcp' package: "
+            "pip install scitex-notification[mcp]"
+        )
     return [
         types.Tool(
             name="notify",

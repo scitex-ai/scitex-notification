@@ -10,13 +10,15 @@ from a centralized shell profile without requiring manual env var setup.
 
 from __future__ import annotations
 
-import logging
 import os
 import re
 from pathlib import Path
 from typing import Dict, List
 
-logger = logging.getLogger(__name__)
+import scitex_logging as slogging
+
+# PS-220: shippable diagnostics must use scitex-logging, not stdlib logging.
+logger = slogging.getLogger(__name__)
 
 _ENV_VAR = "SCITEX_NOTIFICATION_ENV_SRC"
 
