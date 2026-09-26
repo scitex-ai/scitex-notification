@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import inspect
 from datetime import datetime
 from typing import Optional
 
@@ -18,6 +19,33 @@ __all__ = [
     "skills_list_handler",
     "skills_get_handler",
 ]
+
+
+def _constructor_kwargs(backend_cls: type, kwargs: dict) -> dict:
+    """Return only the kwargs that ``backend_cls.__init__`` actually accepts.
+
+    The MCP layer receives every tool argument as one flat mapping, but a
+    backend constructor is strict — ``WebhookBackend(url=None)``,
+    ``TelegramBackend(bot_token, chat_id)``. Forwarding a send-level argument
+    (``idempotency_key``, ``image_path``, ``voice_path``, ``document_path``)
+    into construction raises ``TypeError`` BEFORE ``send()`` runs, so the
+    notification is never attempted and the caller gets a generic failure with
+    no delivery receipt. Send-level arguments belong to ``send()``, which takes
+    ``**kwargs``.
+
+    The CLASS signature is inspected, not ``__init__``'s: a backend that
+    defines no ``__init__`` of its own inherits ``object.__init__``, whose
+    ``(self, /, *args, **kwargs)`` reads as "accepts anything" and leaks every
+    send-level argument into ``Backend(idempotency_key=...)`` — the same
+    ``TypeError`` this seam exists to prevent, one inheritance level down
+    (``DesktopBackend`` is the live case). Inspecting the class resolves
+    through the MRO and excludes ``self``, so only a backend that genuinely
+    declares ``**kwargs`` receives the whole mapping.
+    """
+    params = inspect.signature(backend_cls).parameters
+    if any(p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values()):
+        return dict(kwargs)
+    return {k: v for k, v in kwargs.items() if k in params}
 
 
 async def notify_handler(
@@ -64,7 +92,10 @@ async def notify_handler(
                     )
                     continue
 
-                b = get_backend(backend_name, **kwargs)
+                b = get_backend(
+                    backend_name,
+                    **_constructor_kwargs(BACKENDS[backend_name], kwargs),
+                )
                 result = await b.send(
                     message,
                     title=title,
@@ -78,6 +109,9 @@ async def notify_handler(
                         "backend": backend_name,
                         "success": result.success,
                         "error": result.error,
+                        "error_code": result.error_code,
+                        "delivery_id": result.delivery_id,
+                        "idempotency_key": result.idempotency_key,
                         "details": result.details,
                     }
                 )

@@ -64,6 +64,8 @@ BACKEND_PACKAGES = {
     "playwright": "playwright",
     "email": None,  # Uses stdlib smtplib
     "webhook": None,  # Uses stdlib urllib
+    "telegram": None,  # Uses stdlib urllib
+    "twilio": None,  # Uses stdlib urllib
 }
 
 

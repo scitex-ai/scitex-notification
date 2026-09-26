@@ -137,6 +137,22 @@ stxn.alert(
 
 Text messages are truncated at 4096 chars (Telegram limit).
 
+Successful sends return a neutral delivery receipt. For Telegram,
+`delivery_id` is the Bot API `message_id`. A caller-supplied
+`idempotency_key` is preserved for end-to-end correlation; the receipt reports
+`idempotency_enforced: false` because Telegram does not provide native send
+deduplication.
+
+The canonical CLI surface uses the same backend:
+
+```bash
+scitex-notification send "Agent finished" --backend telegram
+```
+
+This backend is outbound notification delivery. Bidirectional agent ingress,
+acknowledgement, queueing, and steering belong to the agent communication
+gateway rather than the notification backend.
+
 `is_available()`: returns `True` if both `bot_token` and `chat_id` are set.
 
 ## twilio
@@ -168,33 +184,12 @@ print(result.success, result.details)
 
 ## BaseNotifyBackend
 
-```python
-class BaseNotifyBackend(ABC):
-    name: str = "base"
-
-    @abstractmethod
-    async def send(
-        self,
-        message: str,
-        title: Optional[str] = None,
-        level: NotifyLevel = NotifyLevel.INFO,
-        **kwargs,
-    ) -> NotifyResult: ...
-
-    @abstractmethod
-    def is_available(self) -> bool: ...
-```
+Every backend subclasses `BaseNotifyBackend` and implements two members:
+`async send(message, title=None, level=NotifyLevel.INFO, **kwargs) -> NotifyResult`
+and `is_available() -> bool`. `name` supplies the registry key.
 
 ## NotifyResult / NotifyLevel
 
-```python
-@dataclass
-class NotifyResult:
-    success: bool; backend: str; message: str
-    timestamp: str            # ISO 8601
-    error: Optional[str] = None
-    details: Optional[dict] = None
-
-class NotifyLevel(Enum):
-    INFO = "info"; WARNING = "warning"; ERROR = "error"; CRITICAL = "critical"
-```
+`NotifyResult(success: bool, backend: str, message: str, timestamp: str — ISO 8601,
+error: str | None = None, details: dict | None = None)`.
+`NotifyLevel` = `INFO | WARNING | ERROR | CRITICAL`.

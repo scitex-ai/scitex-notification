@@ -65,6 +65,13 @@ def get_tool_schemas() -> list[types.Tool]:
                         "description": "Timeout for visual backends (matplotlib, playwright)",
                         "default": 5.0,
                     },
+                    "idempotency_key": {
+                        "type": "string",
+                        "description": (
+                            "Caller-generated correlation key returned in the delivery "
+                            "receipt. Backends report whether they enforce deduplication."
+                        ),
+                    },
                 },
                 "required": ["message"],
             },
