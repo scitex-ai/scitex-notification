@@ -70,6 +70,8 @@ docs = [
 ]
 all = [
     "scitex-notification[audio]",
+    "scitex-notification[dev]",
+    "scitex-notification[docs]",
     "scitex-notification[mcp]",
     "scitex-notification[playwright]",
     "scitex-notification[twilio]",
