@@ -1,14 +1,29 @@
 name: ci
 
-# PILOT: org-level reusable-workflow caller (scitex-ai/.github, 2026-07-10).
-# Replaces the formerly-inlined 4 jobs (pytest-matrix, import-smoke, audit,
-# docs-sphinx) with thin `uses:` calls into scitex-ai/.github reusable
-# workflows — same job bodies, now centrally maintained. Triggers/concurrency
-# preserved verbatim from the prior file.
+# ============================================================================
+# CANONICAL scitex CI — thin org-reusable caller (the ONE per-repo shape).
+# Rendered for scitex-notification by `scitex-dev ecosystem ci-template apply`.
 #
-# New required-status-check contexts (see comments per job below) may not
-# match OLD required-status-check contexts on develop/main branch
-# protection — branch protection updated as part of this PR where needed.
+# Job bodies live ONCE, org-side, in scitex-ai/.github@main — a shared
+# workflow cannot drift per-repo (operator decision, 2026-07-21, superseding
+# the retired consolidated pr-ci.yml/release-ci.yml pair). This file carries
+# only triggers, concurrency, and thin `uses:` calls.
+#
+# Runner policy: SELF-HOSTED ONLY — GitHub-hosted runners are forbidden
+# (PS-169). Runner selection is the Actions Variable CI_RUNS_ON (repo ->
+# org precedence),
+# resolved from THIS repo's context by the called workflows via
+#   runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '["self-hosted","Linux","X64","scitex-ci"]') }}
+# (`vars` in a reusable workflow resolve against the CALLER repo/org, so a
+# per-repo CI_RUNS_ON override still works through the shared bodies).
+#
+# Required-status-check contexts (branch protection must reference these;
+# under workflow_call GitHub renders "<caller-job-id> / <reusable job name>"):
+#   pytest-matrix / pytest-matrix-on-ubuntu-py<X.YY>
+#   import-smoke / import-smoke-on-ubuntu-py3-12
+#   quality-audit / audit
+#   rtd-sphinx-build / docs-sphinx
+# ============================================================================
 
 on:
   pull_request:
@@ -21,25 +36,23 @@ on:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Cancel superseded PR runs; NEVER cancel post-merge/protected-branch runs
+  # (preserves the retired release-ci.yml coalescing semantic).
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   pytest-matrix:
-    # New required-status-check context: "pytest-matrix / pytest-matrix-on-ubuntu-py<X.YY>"
     uses: scitex-ai/.github/.github/workflows/pytest-matrix.yml@main
     secrets: inherit
 
   import-smoke:
-    # New required-status-check context: "import-smoke / import-smoke-on-ubuntu-py3-12"
     uses: scitex-ai/.github/.github/workflows/import-smoke.yml@main
     secrets: inherit
 
   quality-audit:
-    # New required-status-check context: "quality-audit / audit"
     uses: scitex-ai/.github/.github/workflows/quality-audit.yml@main
     secrets: inherit
 
   rtd-sphinx-build:
-    # New required-status-check context: "rtd-sphinx-build / docs-sphinx"
     uses: scitex-ai/.github/.github/workflows/rtd-sphinx-build.yml@main
     secrets: inherit

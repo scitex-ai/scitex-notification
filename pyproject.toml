@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scitex-notification"
-version = "0.2.9"
+version = "0.2.10"
 description = "Multi-backend notification system for SciTeX"
 readme = "README.md"
 license = "AGPL-3.0-only"
@@ -74,6 +74,8 @@ docs = [
 ]
 all = [
     "scitex-notification[audio]",
+    "scitex-notification[dev]",
+    "scitex-notification[docs]",
     "scitex-notification[mcp]",
     "scitex-notification[playwright]",
     "scitex-notification[twilio]",

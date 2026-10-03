@@ -3,6 +3,10 @@
 
 import pytest
 
+# `tool_schemas` imports `mcp.types` at module level; skip cleanly on
+# installs without the [mcp] extra.
+pytest.importorskip("mcp")
+
 from scitex_notification._mcp import tool_schemas
 
 
