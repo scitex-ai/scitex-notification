@@ -16,8 +16,12 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 
+import scitex_logging as slogging
+
 from . import __version__
 from ._env_loader import load_scitex_notification_env as _load_env
+
+log = slogging.getLogger(__name__)
 
 _load_env()
 
@@ -144,15 +148,14 @@ def main():
     if not MCP_AVAILABLE:
         import sys
 
-        print("=" * 60)
-        print("MCP Server 'scitex-notification' requires the 'mcp' package.")
-        print()
-        print("Install with:")
-        print("  pip install mcp")
-        print()
-        print("Or install scitex-notification with MCP support:")
-        print("  pip install scitex-notification[mcp]")
-        print("=" * 60)
+        # PS-220: diagnostics via scitex-logging (stderr), not print.
+        log.error("=" * 60)
+        log.error("MCP Server 'scitex-notification' requires the 'mcp' package.")
+        log.error("Install with:")
+        log.error("  pip install mcp")
+        log.error("Or install scitex-notification with MCP support:")
+        log.error("  pip install scitex-notification[mcp]")
+        log.error("=" * 60)
         sys.exit(1)
 
     asyncio.run(_run_server())

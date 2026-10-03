@@ -1,0 +1,23 @@
+# scitex-dev project-type config
+# Drives which rule families the auditor applies.
+# See: scitex-dev ecosystem audit-project --help
+
+project-type:
+ - pip
+
+audit:
+ root-whitelist:
+  files:
+  - codecov.yml # Codecov v2 config; canonical location is repo root.
+ exemptions:
+  PS-224:
+  - path: .github/workflows/cla.yml::call
+    line: 0
+    # Verified 2026-09-22 against the callee
+    # (scitex-ai/.github/.github/workflows/cla.yml@main): `runs_on` is a
+    # workflow_call input defaulting to '["ubuntu-latest"]' (ephemeral
+    # GitHub-hosted), and this caller passes nothing, so the job lands on
+    # a disposable hosted VM — a compromise there costs one runner, not
+    # the fleet credential. The caller also passes a single NAMED secret
+    # (GH_PERSONAL_ACCESS_TOKEN), not `secrets: inherit`.
+    reason: "cla.yml::call delegates to scitex-ai/.github cla.yml whose runs_on input defaults to ephemeral ubuntu-latest (verified in callee source); caller passes only the one named secret the callee declares, not secrets:inherit."
