@@ -33,8 +33,9 @@ from email import encoders
 from email.mime.base import MIMEBase as _MIMEBase
 from email.mime.multipart import MIMEMultipart as _MIMEMultipart
 from email.mime.text import MIMEText as _MIMEText
-from typing import Optional, Union
+from typing import Callable, Optional, Union
 
+import click
 import scitex_logging as slogging
 
 log = slogging.getLogger(__name__)
@@ -127,6 +128,8 @@ def send_gmail(
     verbose: bool = True,
     smtp_server: Optional[str] = None,
     smtp_port: Optional[int] = None,
+    *,
+    smtp_factory: Optional[Callable[[str, int], smtplib.SMTP]] = None,
 ) -> None:
     """Send an email via SMTP.
 
@@ -158,6 +161,10 @@ def send_gmail(
         Print a confirmation line on success.
     smtp_server, smtp_port : optional
         Override SMTP host/port auto-detection.
+    smtp_factory : callable, optional
+        Construct the SMTP transport from host and port. Defaults to
+        ``smtplib.SMTP``; an explicit in-memory collaborator permits offline
+        transaction tests without contacting a mail server.
     """
     if ID == "auto":
         ID = _gen_id()
@@ -185,7 +192,8 @@ def send_gmail(
     smtp_port = smtp_port or 587
 
     try:
-        server = smtplib.SMTP(smtp_server, smtp_port)
+        factory = smtplib.SMTP if smtp_factory is None else smtp_factory
+        server = factory(smtp_server, smtp_port)
         server.starttls()
         server.login(sender_gmail, sender_password)
 
@@ -248,8 +256,8 @@ def send_gmail(
                 out += "    Attached:\n"
                 for ap in attachment_paths:
                     out += f"        {ap}\n"
-            # PS-220: user-facing confirmation via scitex-logging, not print.
-            log.info(out)
+            # Requested confirmation is stdout, independent of diagnostics.
+            click.echo(out, color=True)
 
     except Exception as e:
         log.error(f"Email was not sent: {e}")
