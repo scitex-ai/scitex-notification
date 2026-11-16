@@ -4,18 +4,19 @@ name: ci
 # CANONICAL scitex CI — thin org-reusable caller (the ONE per-repo shape).
 # Rendered for scitex-notification by `scitex-dev ecosystem ci-template apply`.
 #
-# Job bodies live ONCE, org-side, in scitex-ai/.github@main — a shared
+# Job bodies live ONCE, org-side, at one reviewed immutable revision — a shared
 # workflow cannot drift per-repo (operator decision, 2026-07-21, superseding
 # the retired consolidated pr-ci.yml/release-ci.yml pair). This file carries
 # only triggers, concurrency, and thin `uses:` calls.
+# Pin the actual production commit qualified after the ordinary source merge;
+# runner-group SHA admission must not assume branch/SHA alias equivalence.
 #
-# Runner policy: SELF-HOSTED ONLY — GitHub-hosted runners are forbidden
-# (PS-169). Runner selection is the Actions Variable CI_RUNS_ON (repo ->
-# org precedence),
-# resolved from THIS repo's context by the called workflows via
-#   runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '["self-hosted","Linux","X64","scitex-ci"]') }}
-# (`vars` in a reusable workflow resolve against the CALLER repo/org, so a
-# per-repo CI_RUNS_ON override still works through the shared bodies).
+# Runner policy (operator 2026-10-03): company compute02/03/04 runners are
+# organization-only and require confirmed original actor, triggering actor
+# and same-repository PR author membership. Forks and unknown membership
+# run on GitHub-hosted hardware. Pass the repository/org CI_RUNS_ON preference
+# to the authoritative reusable admission workflow; the preference and labels
+# confer no authorization. An absent variable defaults to ubuntu-latest.
 #
 # Required-status-check contexts (branch protection must reference these;
 # under workflow_call GitHub renders "<caller-job-id> / <reusable job name>"):
@@ -40,19 +41,39 @@ concurrency:
   # (preserves the retired release-ci.yml coalescing semantic).
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# EACH JOB PASSES ONLY WHAT ITS CALLEE DECLARES. Measured 2026-08-05 against
+# scitex-ai/.github:
+#   pytest-matrix     workflow_call.secrets: CODECOV_TOKEN (required: false)
+#   import-smoke      workflow_call: {}      -- declares nothing
+#   quality-audit     workflow_call: {}      -- declares nothing
+#   rtd-sphinx-build  workflow_call.inputs only, no secrets
+# A callee that declares no secrets cannot RECEIVE one -- passing an undeclared
+# secret is an error -- so those three take no `secrets:` key at all. That is
+# why this is not a uniform "name the secret" edit.
+#
+# These triggers (pull_request / push / schedule) do NOT hand secrets to fork
+# PRs, so this was never the attacker-triggerable exposure that cla.yml had.
+# It is over-broad forwarding: every secret the repo holds, offered to four
+# workflows that between them want one optional token. Fixed on merit.
 jobs:
   pytest-matrix:
-    uses: scitex-ai/.github/.github/workflows/pytest-matrix.yml@main
-    secrets: inherit
+    uses: scitex-ai/.github/.github/workflows/pytest-matrix.yml@cd4e545a20a1e35385ffe88f4a963ae3c500819b
+    with:
+      runs_on: ${{ vars.CI_RUNS_ON || '["ubuntu-latest"]' }}
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   import-smoke:
-    uses: scitex-ai/.github/.github/workflows/import-smoke.yml@main
-    secrets: inherit
+    uses: scitex-ai/.github/.github/workflows/import-smoke.yml@cd4e545a20a1e35385ffe88f4a963ae3c500819b
+    with:
+      runs_on: ${{ vars.CI_RUNS_ON || '["ubuntu-latest"]' }}
 
   quality-audit:
-    uses: scitex-ai/.github/.github/workflows/quality-audit.yml@main
-    secrets: inherit
+    uses: scitex-ai/.github/.github/workflows/quality-audit.yml@cd4e545a20a1e35385ffe88f4a963ae3c500819b
+    with:
+      runs_on: ${{ vars.CI_RUNS_ON || '["ubuntu-latest"]' }}
 
   rtd-sphinx-build:
-    uses: scitex-ai/.github/.github/workflows/rtd-sphinx-build.yml@main
-    secrets: inherit
+    uses: scitex-ai/.github/.github/workflows/rtd-sphinx-build.yml@cd4e545a20a1e35385ffe88f4a963ae3c500819b
+    with:
+      runs_on: ${{ vars.CI_RUNS_ON || '["ubuntu-latest"]' }}
