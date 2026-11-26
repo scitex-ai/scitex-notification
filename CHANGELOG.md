@@ -7,6 +7,13 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- `send_email(..., message_id="<local@domain>")`: an optional caller-chosen
+  `Message-ID` header, so a sender can later match replies by their
+  `In-Reply-To` / `References` headers. Malformed values (including any
+  CR/LF) raise `ValueError`. Omitted, the submission server assigns one as
+  before.
+
 ## [0.2.9]
 
 ### Added

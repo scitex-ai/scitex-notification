@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 import smtplib
 from datetime import datetime
 from email.mime.text import MIMEText
@@ -25,6 +26,33 @@ def _getenv_email(*names: str) -> Optional[str]:
     return None
 
 
+_MESSAGE_ID = re.compile(r"^<[^<>\s@]+@[^<>\s@]+>$")
+
+
+def _build_message(
+    to: str,
+    subject: str,
+    body: str,
+    from_addr: str,
+    message_id: Optional[str] = None,
+) -> MIMEText:
+    """Build the plain-text message, optionally with a caller-chosen Message-ID.
+
+    A caller-chosen Message-ID lets the sender later match replies by their
+    ``In-Reply-To`` / ``References`` headers. Without one the submission
+    server assigns an ID the caller never learns.
+    """
+    if message_id is not None and not _MESSAGE_ID.match(message_id):
+        raise ValueError("message_id must look like <local@domain>")
+    msg = MIMEText(body)
+    msg["Subject"] = subject
+    msg["From"] = from_addr
+    msg["To"] = to
+    if message_id is not None:
+        msg["Message-ID"] = message_id
+    return msg
+
+
 def _send_email(
     to: str,
     subject: str,
@@ -33,6 +61,7 @@ def _send_email(
     password: Optional[str] = None,
     smtp_host: Optional[str] = None,
     smtp_port: Optional[int] = None,
+    message_id: Optional[str] = None,
 ) -> None:
     """Send an email via SMTP using stdlib only.
 
@@ -56,6 +85,9 @@ def _send_email(
     smtp_port : int, optional
         SMTP port. Falls back to SCITEX_NOTIFICATION_EMAIL_SMTP_PORT
         (default: 587).
+    message_id : str, optional
+        Explicit ``Message-ID`` header (``<local@domain>``), so replies can be
+        threaded back to this message. Omitted: the server assigns one.
     """
     resolved_from = (
         from_addr
@@ -93,10 +125,7 @@ def _send_email(
         port_str = _getenv_email("SCITEX_NOTIFICATION_EMAIL_SMTP_PORT")
         resolved_port = int(port_str) if port_str else 587
 
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = resolved_from
-    msg["To"] = to
+    msg = _build_message(to, subject, body, resolved_from, message_id)
 
     with smtplib.SMTP(resolved_host, resolved_port) as server:
         server.starttls()
@@ -114,6 +143,7 @@ def send_email(
     password: Optional[str] = None,
     smtp_host: Optional[str] = None,
     smtp_port: Optional[int] = None,
+    message_id: Optional[str] = None,
 ) -> None:
     """Send a plain-text email synchronously with explicit credentials.
 
@@ -125,6 +155,9 @@ def send_email(
     left ``None`` still falls back to the ``SCITEX_NOTIFICATION_EMAIL_*``
     env chain documented on :func:`_send_email`.
 
+    Pass ``message_id`` (``<local@domain>``) to fix the ``Message-ID``
+    header, so replies can later be matched via ``In-Reply-To``.
+
     Raises any ``smtplib`` error on failure (fail-loud — no silent ``False``).
     """
     _send_email(
@@ -135,6 +168,7 @@ def send_email(
         password=password,
         smtp_host=smtp_host,
         smtp_port=smtp_port,
+        message_id=message_id,
     )
 
 
