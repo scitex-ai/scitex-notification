@@ -388,7 +388,7 @@ def test_send_gmail_real_attachment_mime_and_verbatim_paths(
     "failure", ["construct", "starttls", "login", "send_message", "quit"]
 )
 def test_send_gmail_failed_stage_stays_diagnostic_and_never_confirms(
-    failure, diagnostic_threshold, capsys
+    failure, diagnostic_threshold, capsys, caplog
 ):
     """Synthetic failures retain existing stop/error/None behavior, not delivery."""
     # Arrange
@@ -408,9 +408,15 @@ def test_send_gmail_failed_stage_stays_diagnostic_and_never_confirms(
     captured = capsys.readouterr()
 
     # Assert
+    # The refusal is an ERROR diagnostic record. Read it from the log records:
+    # the scitex-logging stderr handler binds its stream before capsys swaps
+    # sys.stderr, so captured.err does not reliably see it.
+    errors = [r.getMessage() for r in caplog.records if r.levelno >= logging.ERROR]
     assert (
         result, captured.out,
-        f"Email was not sent: synthetic {failure} refusal" in captured.err,
-        "Email was sent:" in captured.err, [call[0] for call in transport.calls],
+        f"Email was not sent: synthetic {failure} refusal" in errors,
+        any("Email was sent:" in r.getMessage() for r in caplog.records)
+        or "Email was sent:" in captured.err,
+        [call[0] for call in transport.calls],
         _logger_state(),
     ) == (None, "", True, False, expected_stages, before)
