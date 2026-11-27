@@ -202,7 +202,13 @@ def test_send_with_profile_delivers_as_the_profile(smtp_server):
     # Arrange
     profile = _profile(smtp_server.port)
     # Act
-    result = send_with_profile(profile, NOTICE_SUBJECT, NOTICE_BODY, template="notice")
+    result = send_with_profile(
+        profile,
+        NOTICE_SUBJECT,
+        NOTICE_BODY,
+        template="notice",
+        ssl_context=smtp_server.client_context,
+    )
     smtp_server.thread.join(timeout=10)
     record = smtp_server.record
     header = email.message_from_bytes(record["data"], policy=email.policy.default)
@@ -228,6 +234,7 @@ def test_send_with_profile_suppresses_a_repeat(smtp_server, tmp_path):
     # Arrange
     profile = _profile(smtp_server.port)
     kwargs = dict(
+        ssl_context=smtp_server.client_context,
         dedupe_key="disk:/data", dedupe_window_s=3600, rate_limit_dir=tmp_path
     )
     send_with_profile(profile, NOTICE_SUBJECT, NOTICE_BODY, **kwargs)

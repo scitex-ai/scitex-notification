@@ -24,6 +24,14 @@ class _LocalSMTPServer:
         self.thread.start()
 
     def _serve(self):
+        try:
+            self._session()
+        except (OSError, ssl.SSLError) as exc:  # e.g. the client refused our cert
+            self.record["error"] = type(exc).__name__
+        finally:
+            self.listener.close()
+
+    def _session(self):
         conn, _ = self.listener.accept()
         conn.settimeout(10)
         stream = conn.makefile("rb")
@@ -65,7 +73,6 @@ class _LocalSMTPServer:
             else:
                 reply("250 ok")
         conn.close()
-        self.listener.close()
 
 
 @pytest.fixture
@@ -75,11 +82,13 @@ def smtp_server(tmp_path):
     cert, key = tmp_path / "cert.pem", tmp_path / "key.pem"
     subprocess.run(
         ["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1",
-         "-subj", "/CN=localhost", "-keyout", str(key), "-out", str(cert)],
+         "-subj", "/CN=localhost", "-addext", "subjectAltName=IP:127.0.0.1,DNS:localhost", "-keyout", str(key), "-out", str(cert)],
         check=True,
         capture_output=True,
     )
     server = _LocalSMTPServer(str(cert), str(key))
+    # Clients trust exactly this throwaway CA; verification stays on.
+    server.client_context = ssl.create_default_context(cafile=str(cert))
     yield server
     server.thread.join(timeout=10)
 

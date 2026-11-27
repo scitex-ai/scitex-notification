@@ -12,6 +12,14 @@ versions follow [Semantic Versioning](https://semver.org/).
 Version 0.2.10 was tagged but never reached PyPI (its release run was
 cancelled), so 0.2.11 is the first published release with `message_id`.
 
+### Security
+- STARTTLS now verifies the SMTP server certificate and host name
+  (`ssl.create_default_context()`). Before, `starttls()` ran without a
+  context, so an interceptor could present any certificate and receive the
+  SMTP password. `send_email` / `send_with_profile` accept `ssl_context=`
+  for a private CA. A relay with an untrusted certificate now fails with
+  `ssl.SSLCertVerificationError` instead of sending.
+
 ### Added
 - Message templates: `render_template(name, data) -> (subject, body)`,
   `validate_message(name, subject, body, **context)`,

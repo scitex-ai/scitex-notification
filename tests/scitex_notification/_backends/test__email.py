@@ -4,6 +4,7 @@ import email
 import email.policy
 import email.utils
 import inspect
+import ssl
 
 import pytest
 
@@ -134,6 +135,7 @@ def test_send_email_from_name_reaches_header_but_not_login_or_envelope(smtp_serv
         password="local-test-only",
         smtp_host="127.0.0.1",
         smtp_port=smtp_server.port,
+        ssl_context=smtp_server.client_context,
         from_name="SciTeX Agent (worker-1)",
     )
     # Act
@@ -155,3 +157,38 @@ def test_send_email_from_name_reaches_header_but_not_login_or_envelope(smtp_serv
         "<ops@example.org>",
         ("SciTeX Agent (worker-1)", "agent@example.org"),
     )
+
+
+def test_send_email_refuses_an_unverified_server_certificate(smtp_server):
+    # Arrange: the local server's certificate is self-signed, so the default
+    # (verifying) context must refuse it before any password is sent.
+    kwargs = dict(
+        from_addr="agent@example.org",
+        password="local-test-only",
+        smtp_host="127.0.0.1",
+        smtp_port=smtp_server.port,
+    )
+    call = lambda: send_email("ops@example.org", "S", "B", **kwargs)  # noqa: E731
+    # Act
+    expected = ssl.SSLCertVerificationError
+    # Assert
+    with pytest.raises(expected):
+        call()
+
+
+def test_unverified_server_never_receives_the_login(smtp_server):
+    # Arrange
+    kwargs = dict(
+        from_addr="agent@example.org",
+        password="local-test-only",
+        smtp_host="127.0.0.1",
+        smtp_port=smtp_server.port,
+    )
+    try:
+        send_email("ops@example.org", "S", "B", **kwargs)
+    except ssl.SSLError:
+        pass
+    # Act
+    smtp_server.thread.join(timeout=10)
+    # Assert
+    assert "login" not in smtp_server.record

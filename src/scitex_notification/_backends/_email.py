@@ -10,6 +10,7 @@ import asyncio
 import os
 import re
 import smtplib
+import ssl
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.utils import formataddr
@@ -72,6 +73,7 @@ def _send_email(
     message_id: Optional[str] = None,
     from_name: Optional[str] = None,
     env_fallback: bool = True,
+    ssl_context: Optional[ssl.SSLContext] = None,
 ) -> None:
     """Send an email via SMTP using stdlib only.
 
@@ -107,12 +109,19 @@ def _send_email(
         chains below (a profile must not borrow another identity's password);
         ``from_addr`` and ``smtp_host`` are then required, and no password
         means no SMTP login.
+    ssl_context : ssl.SSLContext, optional
+        Context for STARTTLS. Default: ``ssl.create_default_context()``, which
+        verifies the server certificate and host name against the system CA
+        store, so the password is never sent to an unverified server. Pass a
+        context with your own CA for a private relay.
     """
     if not env_fallback:
         if not from_addr or not smtp_host:
             raise ValueError("from_addr and smtp_host are required without env fallback")
         msg = _build_message(to, subject, body, from_addr, message_id, from_name)
-        _deliver(msg, to, from_addr, password, smtp_host, smtp_port or 587)
+        _deliver(
+            msg, to, from_addr, password, smtp_host, smtp_port or 587, ssl_context
+        )
         return
 
     resolved_from = (
@@ -152,13 +161,25 @@ def _send_email(
         resolved_port = int(port_str) if port_str else 587
 
     msg = _build_message(to, subject, body, resolved_from, message_id, from_name)
-    _deliver(msg, to, resolved_from, resolved_password, resolved_host, resolved_port)
+    _deliver(
+        msg,
+        to,
+        resolved_from,
+        resolved_password,
+        resolved_host,
+        resolved_port,
+        ssl_context,
+    )
 
 
-def _deliver(msg, to, from_addr, password, host, port) -> None:
-    """STARTTLS submission; login and envelope sender are the bare address."""
+def _deliver(msg, to, from_addr, password, host, port, context=None) -> None:
+    """Verified STARTTLS submission; login and envelope sender are the bare address.
+
+    The certificate is always verified (a default context when none is given):
+    an unverified STARTTLS would hand the SMTP password to any interceptor.
+    """
     with smtplib.SMTP(host, port) as server:
-        server.starttls()
+        server.starttls(context=context or ssl.create_default_context())
         if password:
             server.login(from_addr, password)
         server.send_message(msg, from_addr=from_addr, to_addrs=[to])
@@ -175,6 +196,7 @@ def send_email(
     smtp_port: Optional[int] = None,
     message_id: Optional[str] = None,
     from_name: Optional[str] = None,
+    ssl_context: Optional[ssl.SSLContext] = None,
 ) -> None:
     """Send a plain-text email synchronously with explicit credentials.
 
@@ -190,6 +212,8 @@ def send_email(
     header, so replies can later be matched via ``In-Reply-To``.
     Pass ``from_name`` to show a display name (``"Name" <from_addr>``) in the
     ``From`` header; the SMTP login and envelope sender stay ``from_addr``.
+    STARTTLS verifies the server certificate (``ssl.create_default_context()``
+    unless ``ssl_context`` is given).
 
     Raises any ``smtplib`` error on failure (fail-loud — no silent ``False``).
     """
@@ -203,6 +227,7 @@ def send_email(
         smtp_port=smtp_port,
         message_id=message_id,
         from_name=from_name,
+        ssl_context=ssl_context,
     )
 
 

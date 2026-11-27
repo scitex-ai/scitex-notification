@@ -124,7 +124,7 @@ State: `$SCITEX_NOTIFICATION_RATE_LIMIT_DIR`, else `$SCITEX_DIR/notification/run
 
 ## Display name on plain `send_email`
 
-`send_email(to, subject, body, *, from_addr=, from_name=None, ...)` sets `From: "<from_name>" <from_addr>` (RFC 2047 encoded when non-ASCII; CR/LF rejected). SMTP login and envelope sender stay `from_addr`. Feature-detect with `"from_name" in inspect.signature(stxn.send_email).parameters`.
+`send_email(to, subject, body, *, from_addr=, from_name=None, ...)` sets `From: "<from_name>" <from_addr>` (RFC 2047 encoded when non-ASCII; CR/LF rejected). SMTP login and envelope sender stay `from_addr`. STARTTLS verifies the server certificate (system CA store, host name checked); pass `ssl_context=ssl.create_default_context(cafile=...)` for a private CA. Feature-detect with `"from_name" in inspect.signature(stxn.send_email).parameters`.
 
 ## CLI
 
