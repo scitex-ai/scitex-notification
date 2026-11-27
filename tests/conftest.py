@@ -1,38 +1,10 @@
-"""Module-import-time coverage wiring (parallel + subprocess support).
+"""Pytest configuration for scitex-notification.
 
-`os.environ.setdefault` would be a no-op here because pytest-cov has
-already set ``COVERAGE_FILE`` to a tmp dir by the time conftest is loaded.
+Subprocess coverage is configured in pyproject.toml via coverage.py's subprocess patch; test collection must not install .pth files or overwrite caller-owned coverage environment variables.
 
 See ``scitex_dev._skills.general.05_development_06_subprocess-coverage``.
 """
 from __future__ import annotations
-
-import os
-import sysconfig
-from pathlib import Path
-
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
-os.environ["COVERAGE_PROCESS_START"] = str(_PROJECT_ROOT / "pyproject.toml")
-os.environ["COVERAGE_FILE"] = str(_PROJECT_ROOT / ".coverage")
-
-
-def _ensure_subprocess_coverage_shim() -> None:
-    purelib = Path(sysconfig.get_paths()["purelib"])
-    pth = purelib / "_scitex_notification_subprocess_coverage.pth"
-    shim = (
-        "import os, coverage\n"
-        "if os.environ.get('COVERAGE_PROCESS_START'):\n"
-        "    coverage.process_startup()\n"
-    )
-    try:
-        if not pth.exists() or pth.read_text() != shim:
-            pth.write_text(shim)
-    except OSError:
-        pass
-
-
-_ensure_subprocess_coverage_shim()
 
 
 # ===== existing conftest content below =====
