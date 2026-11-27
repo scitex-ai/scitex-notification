@@ -7,6 +7,15 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.1]
+
+### Fixed
+- `send_email` / the email backend with several recipients in `to`
+  (`"a@x.org, Name <b@x.org>"`): 0.3.0 passed the whole string as ONE envelope
+  recipient, which a real SMTP server rejects, so the mail reached nobody. Each
+  address now gets its own RCPT, parsed the way the `To` header is read. A `to`
+  with no address raises `ValueError`.
+
 ## [0.3.0]
 
 Readable `notice` layout. Breaking for hand-written notice bodies: the 0.2.x
