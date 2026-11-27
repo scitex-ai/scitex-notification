@@ -128,6 +128,48 @@ def test_public_send_email_takes_from_name_as_optional_keyword():
     assert (param.kind, param.default) == (inspect.Parameter.KEYWORD_ONLY, None)
 
 
+def _reparse(msg):
+    return email.message_from_bytes(msg.as_bytes(), policy=email.policy.default)
+
+
+def test_build_message_html_body_makes_plain_first_alternative():
+    # Arrange
+    args = ("ops@example.org", "S", "plain ■ text", "agent@example.org")
+    # Act
+    msg = _reparse(_build_message(*args, html_body="<p>html ■</p>"))
+    # Assert
+    assert (
+        msg.get_content_type(),
+        [p.get_content_type() for p in msg.iter_parts()],
+        msg.get_body(("plain",)).get_content().strip(),
+        msg.get_body(("html",)).get_content().strip(),
+    ) == (
+        "multipart/alternative",
+        ["text/plain", "text/html"],
+        "plain ■ text",
+        "<p>html ■</p>",
+    )
+
+
+def test_build_message_without_html_body_stays_single_text_plain():
+    # Arrange
+    args = ("ops@example.org", "S", "B", "agent@example.org")
+    # Act
+    msg = _build_message(*args)
+    # Assert
+    assert msg.get_content_type() == "text/plain"
+
+
+def test_build_message_rejects_empty_html_body():
+    # Arrange
+    args = ("ops@example.org", "S", "B", "agent@example.org")
+    # Act
+    call = lambda: _build_message(*args, html_body="  ")  # noqa: E731
+    # Assert
+    with pytest.raises(ValueError):
+        call()
+
+
 def test_send_email_from_name_reaches_header_but_not_login_or_envelope(smtp_server):
     # Arrange
     kwargs = dict(

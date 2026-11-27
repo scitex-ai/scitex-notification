@@ -7,6 +7,36 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0]
+
+Readable `notice` layout. Breaking for hand-written notice bodies: the 0.2.x
+layout is now rejected (with messages naming the new form); data rendered
+with `render_template("notice", ...)` needs no change.
+
+### Changed
+- `notice` layout: section headers `■ NEEDS YOU` / `■ DONE` /
+  `■ RUNNING (no action needed)`; one blank line between sections, between
+  questions and before the footer; each question a numbered block with one
+  option per line (`   A) ...`), then `   -> recommend: X` and
+  `   reply: "N X"` on their own lines; bullets indented (`  - ...`); the
+  footer separated by a rule (`NOTICE_RULE`, 40 x `─`; a hand-typed rule of
+  10-80 `─` or `-` is accepted). The validator stays strict on structure:
+  blank lines only where the layout puts them, option letters in order,
+  the reply line must accept the recommendation, no tabs.
+- `NOTICE_MAX_LINES` is now 40 and counts content lines only (questions,
+  options, recommendation/reply lines, bullets); blank lines, headers, the
+  rule and the footer are not counted.
+
+### Added
+- HTML alternative: `render_message_html(name, subject, body)` validates a
+  message and renders it as HTML with the same structure (headings, ordered
+  question list with options, bullet lists, `<hr>` before the footer; all
+  text escaped, http(s) URLs linked). `register_template(..., html=)`
+  registers a template's HTML renderer.
+- `send_email(..., html_body=)` and `send_with_profile(..., html_body=)`
+  send `multipart/alternative` (plain text first, then HTML).
+- Constants `NOTICE_SECTION_MARK` and `NOTICE_RULE`.
+
 ## [0.2.12]
 
 First published release of the 0.2.10 / 0.2.11 work below: both tags exist

@@ -12,20 +12,28 @@ from scitex_notification import (
     render_template,
     validate_message,
 )
-from scitex_notification._templates import NOTICE_MAX_LINES
+from scitex_notification import render_message_html
+from scitex_notification._templates import NOTICE_MAX_LINES, NOTICE_RULE
 
 SUBJECT = "[SciTeX][worker-1] NEEDS-YOU: storage quota decision"
-BODY = """NEEDS YOU
+BODY = f"""\
+■ NEEDS YOU
 1. Raise the archive quota to 2 TB?
-   A) yes  B) no, prune old runs  -> recommend: A
+   A) yes
+   B) no, prune old runs
+   -> recommend: A
    reply: "1 A"
-DONE
-- nightly backup verified https://example.org/run/42
-RUNNING (no action needed)
-- re-index of the archive
---
+
+■ DONE
+  - nightly backup verified https://example.org/run/42
+
+■ RUNNING (no action needed)
+  - re-index of the archive
+
+{NOTICE_RULE}
 agent: worker-1 | host: compute-01 | card/PR: card-7, #12
 """
+FOOTER = f"\n{NOTICE_RULE}\nagent: worker-1 | host: h | card/PR: -\n"
 
 DATA = {
     "kind": "needs-you",
@@ -97,7 +105,7 @@ def test_render_notice_omits_empty_sections():
     # Assert
     assert (subject, body) == (
         "[SciTeX][a] DONE: release 1.2.3",
-        "DONE\n- published\n--\nagent: a | host: h | card/PR: -\n",
+        f"■ DONE\n  - published\n\n{NOTICE_RULE}\nagent: a | host: h | card/PR: -\n",
     )
 
 
@@ -109,7 +117,12 @@ def test_render_notice_reports_all_data_problems_at_once():
     # Assert
     assert all(
         part in joined
-        for part in ("kind must be one of", "title is empty", "meta.agent", "two choices")
+        for part in (
+            "kind must be one of",
+            "title is empty",
+            "meta.agent",
+            "two choices",
+        )
     )
 
 
@@ -151,7 +164,7 @@ def test_notice_rejects_unknown_first_line():
 def test_notice_rejects_sections_out_of_order():
     # Arrange
     subject = "[SciTeX][worker-1] DONE: x"
-    body = "RUNNING (no action needed)\n- a\nDONE\n- b\n--\nagent: worker-1 | host: h | card/PR: -\n"
+    body = "■ RUNNING (no action needed)\n  - a\n\n■ DONE\n  - b\n" + FOOTER
     # Act
     joined = _violations(subject, body)
     # Assert
@@ -160,7 +173,7 @@ def test_notice_rejects_sections_out_of_order():
 
 def test_notice_needs_you_requires_a_recommended_question():
     # Arrange
-    body = "DONE\n- b\n--\nagent: worker-1 | host: h | card/PR: -\n"
+    body = "■ DONE\n  - b\n" + FOOTER
     # Act
     joined = _violations(SUBJECT, body)
     # Assert
@@ -169,11 +182,11 @@ def test_notice_needs_you_requires_a_recommended_question():
 
 def test_notice_question_without_recommend_fails():
     # Arrange
-    body = BODY.replace("  -> recommend: A", "")
+    body = BODY.replace("   -> recommend: A\n", "")
     # Act
     joined = _violations(SUBJECT, body)
     # Assert
-    assert "no options line with '-> recommend: X'" in joined
+    assert "has no '   -> recommend: X' line" in joined
 
 
 def test_notice_recommend_must_be_a_listed_option():
@@ -196,7 +209,7 @@ def test_notice_needs_you_section_requires_needs_you_kind():
 
 def test_notice_requires_footer():
     # Arrange
-    body = BODY.split("--\n")[0]
+    body = BODY.split(NOTICE_RULE)[0]
     # Act
     joined = _violations(SUBJECT, body)
     # Assert
@@ -214,9 +227,9 @@ def test_notice_footer_agent_must_match_subject():
 
 def test_notice_enforces_line_limit():
     # Arrange
-    items = "".join(f"- item {i}\n" for i in range(NOTICE_MAX_LINES))
+    items = "".join(f"  - item {i}\n" for i in range(NOTICE_MAX_LINES))
     body = BODY.replace(
-        "RUNNING (no action needed)\n", "RUNNING (no action needed)\n" + items
+        "■ RUNNING (no action needed)\n", "■ RUNNING (no action needed)\n" + items
     )
     # Act
     joined = _violations(SUBJECT, body)
@@ -226,16 +239,16 @@ def test_notice_enforces_line_limit():
 
 def test_notice_rejects_prose_items():
     # Arrange
-    body = BODY.replace("- re-index of the archive", "The re-index is going fine.")
+    body = BODY.replace("  - re-index of the archive", "The re-index is going fine.")
     # Act
     joined = _violations(SUBJECT, body)
     # Assert
-    assert "must be one '- ' line" in joined
+    assert "must be one '  - ' line" in joined
 
 
 def test_notice_rejects_credential_shaped_text():
     # Arrange
-    body = BODY.replace("- re-index of the archive", "- password=hunter2hunter2")
+    body = BODY.replace("  - re-index of the archive", "  - password=hunter2hunter2")
     # Act
     joined = _violations(SUBJECT, body)
     # Assert
@@ -314,3 +327,138 @@ def test_load_message_data_reads_json_and_yaml(tmp_path):
     loaded = [load_message_data(tmp_path / f"n.{ext}") for ext in ("json", "yaml")]
     # Assert
     assert loaded == [DATA, DATA]
+
+
+# --- readability layout: blank lines, headers, indentation --------------------
+
+
+def test_notice_line_limit_counts_only_content_lines():
+    # Arrange: exactly NOTICE_MAX_LINES content lines plus headers/blank/footer
+    head = '■ NEEDS YOU\n1. q?\n   A) a\n   B) b\n   -> recommend: A\n   reply: "1 A"\n'
+    bullets = "".join(f"  - item {i}\n" for i in range(NOTICE_MAX_LINES - 5))
+    body = head + "\n■ DONE\n" + bullets + FOOTER
+    # Act
+    result = validate_message("notice", SUBJECT, body)
+    # Assert
+    assert result is None
+
+
+@pytest.mark.parametrize(
+    "old, new, expected",
+    [
+        ("\n\n■ DONE", "\n■ DONE", "blank line before section '■ DONE'"),
+        ("\n\n" + NOTICE_RULE, "\n" + NOTICE_RULE, "blank line before the footer rule"),
+        ("\n\n■ DONE", "\n\n\n■ DONE", "only one blank line at a time"),
+        ("   A) yes\n", "   A) yes\n\n", "no blank line inside a question block"),
+        ("■ NEEDS YOU\n1.", "■ NEEDS YOU\n\n1.", "no blank line between a header"),
+        ("■ DONE", "DONE", "section header 'DONE' must be '■ DONE'"),
+        ("  - nightly", "- nightly", "must be one '  - ' line"),
+        ("   B) no", "   C) no", "option 'C' should be 'B'"),
+        ('"1 A"', '"1 B"', "should accept the recommendation (A)"),
+        (
+            "   A) yes\n   B) no, prune old runs\n",
+            "   A) yes  B) no\n",
+            "at least two options",
+        ),
+        ("  - re-index", "\t- re-index", "contains a tab"),
+    ],
+)
+def test_notice_rejects_layout_violations(old, new, expected):
+    # Arrange
+    body = BODY.replace(old, new, 1)
+    # Act
+    joined = _violations(SUBJECT, body)
+    # Assert
+    assert expected in joined
+
+
+def test_notice_rejects_the_previous_compact_layout():
+    # Arrange: the 0.2.x layout (bare headers, inline options, '--' footer)
+    body = (
+        'NEEDS YOU\n1. q?\n   A) yes  B) no  -> recommend: A\n   reply: "1 A"\n'
+        "--\nagent: worker-1 | host: h | card/PR: -\n"
+    )
+    # Act
+    joined = _violations(SUBJECT, body)
+    # Assert
+    assert (
+        "footer missing" in joined and "first line must be a section header" in joined
+    )
+
+
+def test_notice_accepts_an_ascii_rule():
+    # Arrange
+    body = BODY.replace(NOTICE_RULE, "-" * 20)
+    # Act
+    result = validate_message("notice", SUBJECT, body)
+    # Assert
+    assert result is None
+
+
+def test_rendered_questions_are_separated_by_one_blank_line():
+    # Arrange
+    second = {"text": "Second?", "options": ["x", "y"], "recommend": "y"}
+    data = {**DATA, "questions": DATA["questions"] + [second]}
+    # Act
+    _, body = render_template("notice", data)
+    # Assert
+    assert (
+        '   reply: "1 A"\n\n2. Second?\n   A) x\n   B) y\n   -> recommend: B\n' in body
+    )
+
+
+# --- HTML alternative ----------------------------------------------------------
+
+
+def test_html_alternative_has_headings_lists_and_footer():
+    # Arrange
+    subject, body = SUBJECT, BODY
+    # Act
+    page = render_message_html("notice", subject, body)
+    # Assert
+    assert all(
+        part in page
+        for part in (
+            "<h3",
+            ">NEEDS YOU</h3>",
+            '<li value="1"',
+            "<b>B)</b> no, prune old runs",
+            "<code>1 A</code>",
+            ">RUNNING (no action needed)</h3>",
+            '<a href="https://example.org/run/42">',
+            "<hr>",
+            "agent: worker-1 | host: compute-01",
+        )
+    )
+
+
+def test_html_alternative_escapes_markup():
+    # Arrange
+    body = BODY.replace("re-index of the archive", "<script>alert(1)</script> & co")
+    # Act
+    page = render_message_html("notice", SUBJECT, body)
+    # Assert
+    assert (
+        "<script>" not in page
+        and "&lt;script&gt;alert(1)&lt;/script&gt; &amp; co" in page
+    )
+
+
+def test_html_alternative_refuses_an_invalid_message():
+    # Arrange
+    body = "Hi,\n" + BODY
+    # Act
+    call = lambda: render_message_html("notice", SUBJECT, body)  # noqa: E731
+    # Assert
+    with pytest.raises(MessageFormatError):
+        call()
+
+
+def test_html_alternative_needs_a_template_html_renderer(tiny_template):
+    # Arrange
+    call = lambda: render_message_html(tiny_template, "[x] a", "a\n")  # noqa: E731
+    # Act
+    expected = ValueError
+    # Assert
+    with pytest.raises(expected):
+        call()
