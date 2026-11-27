@@ -21,13 +21,19 @@ and restores them, not from monkeypatch.
 
 from __future__ import annotations
 
+import asyncio
 import os
 
 import pytest
 
 from scitex_notification._backends import DesktopBackend, WebhookBackend, get_backend
 from scitex_notification._backends._telegram import TelegramBackend
-from scitex_notification._mcp.handlers import _constructor_kwargs, notify_handler
+from scitex_notification._mcp.handlers import (
+    _constructor_kwargs,
+    notify_handler,
+    render_message_handler,
+    validate_message_handler,
+)
 
 _TELEGRAM_ENV_VARS = (
     "SCITEX_NOTIFICATION_TELEGRAM_TOKEN",
@@ -189,3 +195,42 @@ if __name__ == "__main__":
     pytest.main([os.path.abspath(__file__), "-v"])
 
 # EOF
+
+
+# --- message template handlers ---------------------------------------------
+
+MESSAGE_DATA = {
+    "kind": "FYI",
+    "title": "backup finished",
+    "done": ["backup ok"],
+    "meta": {"agent": "a1", "host": "h1"},
+}
+
+
+def test_render_message_handler_returns_subject():
+    # Arrange
+    data = MESSAGE_DATA
+    # Act
+    result = asyncio.run(render_message_handler(data))
+    # Assert
+    assert result["subject"] == "[SciTeX][a1] FYI: backup finished"
+
+
+def test_render_message_handler_reports_violations():
+    # Arrange
+    data = {"kind": "FYI"}
+    # Act
+    result = asyncio.run(render_message_handler(data))
+    # Assert
+    assert result["success"] is False and result["violations"]
+
+
+def test_validate_message_handler_accepts_a_rendered_notice():
+    # Arrange
+    rendered = asyncio.run(render_message_handler(MESSAGE_DATA))
+    # Act
+    result = asyncio.run(
+        validate_message_handler(rendered["subject"], rendered["body"], agent="a1")
+    )
+    # Assert
+    assert result == {"success": True, "template": "notice", "violations": []}

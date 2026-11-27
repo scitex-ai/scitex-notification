@@ -32,6 +32,7 @@ Multi-backend alerting with automatic fallback. One `alert()` covers local and r
 * [06_python-api](06_python-api.md) — `alert()`, `call()`, `sms()` signatures, backends table (legacy detail)
 * [07_mcp-tools](07_mcp-tools.md) — MCP tool schemas
 * [08_configuration](08_configuration.md) — YAML config, `UIConfig`, level-based routing
+* [09_email-templates-profiles](09_email-templates-profiles.md) — `notice` template + validation, env-configured email profiles, repeat suppression, `send_email(from_name=)`
 
 ### Environment
 * [20_env-vars](20_env-vars.md) — `SCITEX_NOTIFICATION_*` env vars
@@ -77,5 +78,7 @@ scitex-notification mcp start         # Start MCP stdio server
 | `list_notification_backends` | List every registered backend with status |
 | `available_notification_backends` | List backends that are currently working (deps + creds OK) |
 | `get_notification_config` | Show active config (fallback order, level routing, timeouts) |
+| `notification_render_message` | Render structured data with a message template (validated, not sent) |
+| `notification_validate_message` | Validate a subject/body against a template; returns violations |
 
 > Note: `call()` (Twilio phone) and `sms()` (Twilio SMS) are exposed via the Python API and CLI, not as standalone MCP tools. They reach through `notify` when `backend="twilio"`.

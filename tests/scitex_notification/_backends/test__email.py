@@ -1,6 +1,8 @@
 """Tests for the plain-text email message builder."""
 
 import email
+import email.policy
+import email.utils
 import inspect
 
 import pytest
@@ -68,3 +70,88 @@ def test_public_send_email_takes_message_id_as_optional_keyword():
     param = params["message_id"]
     # Assert
     assert (param.kind, param.default) == (inspect.Parameter.KEYWORD_ONLY, None)
+
+
+def _parsed_from(msg):
+    parsed = email.message_from_string(msg.as_string(), policy=email.policy.default)
+    return email.utils.getaddresses([str(parsed["From"])])[0]
+
+
+def test_build_message_from_name_sets_display_name_and_keeps_address():
+    # Arrange
+    args = ("ops@example.org", "S", "B", "agent@example.org")
+    # Act
+    msg = _build_message(*args, from_name="SciTeX Agent (worker-1)")
+    # Assert
+    assert _parsed_from(msg) == ("SciTeX Agent (worker-1)", "agent@example.org")
+
+
+def test_build_message_from_name_encodes_non_ascii():
+    # Arrange
+    args = ("ops@example.org", "S", "B", "agent@example.org")
+    # Act
+    msg = _build_message(*args, from_name="渡邉 エージェント")
+    # Assert
+    assert msg.as_string().isascii() and _parsed_from(msg) == (
+        "渡邉 エージェント",
+        "agent@example.org",
+    )
+
+
+def test_build_message_without_from_name_keeps_bare_address():
+    # Arrange
+    args = ("ops@example.org", "S", "B", "agent@example.org")
+    # Act
+    msg = _build_message(*args)
+    # Assert
+    assert msg["From"] == "agent@example.org"
+
+
+@pytest.mark.parametrize("bad", ["Agent\r\nBcc: x@y", "Agent\nX", "Agent\r"])
+def test_build_message_rejects_multiline_from_name(bad):
+    # Arrange
+    args = ("ops@example.org", "S", "B", "agent@example.org")
+    # Act
+    call = lambda: _build_message(*args, from_name=bad)  # noqa: E731
+    # Assert
+    with pytest.raises(ValueError):
+        call()
+
+
+def test_public_send_email_takes_from_name_as_optional_keyword():
+    # Arrange
+    params = inspect.signature(send_email).parameters
+    # Act
+    param = params["from_name"]
+    # Assert
+    assert (param.kind, param.default) == (inspect.Parameter.KEYWORD_ONLY, None)
+
+
+def test_send_email_from_name_reaches_header_but_not_login_or_envelope(smtp_server):
+    # Arrange
+    kwargs = dict(
+        from_addr="agent@example.org",
+        password="local-test-only",
+        smtp_host="127.0.0.1",
+        smtp_port=smtp_server.port,
+        from_name="SciTeX Agent (worker-1)",
+    )
+    # Act
+    send_email("ops@example.org", "Subject", "Body", **kwargs)
+    smtp_server.thread.join(timeout=10)
+    record = smtp_server.record
+    header = email.message_from_bytes(record["data"], policy=email.policy.default)
+    # Assert
+    assert (
+        record["tls"],
+        record["login"],
+        record["envelope_from"],
+        record["envelope_to"],
+        email.utils.getaddresses([str(header["From"])])[0],
+    ) == (
+        True,
+        "agent@example.org",
+        "<agent@example.org>",
+        "<ops@example.org>",
+        ("SciTeX Agent (worker-1)", "agent@example.org"),
+    )

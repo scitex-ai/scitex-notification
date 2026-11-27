@@ -16,7 +16,7 @@ class TestNotifyLevel:
         expected = {"info", "warning", "error", "critical"}
 
         # Act
-        observed = {l.value for l in NotifyLevel}
+        observed = {level.value for level in NotifyLevel}
 
         # Assert
         assert observed == expected

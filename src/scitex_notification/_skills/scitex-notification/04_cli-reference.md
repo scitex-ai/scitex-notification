@@ -168,3 +168,10 @@ Build and view package documentation (via `scitex_dev` plugin, if installed).
 scitex-notification docs build
 scitex-notification docs serve
 ```
+
+
+## Templates, profiles, profile sends
+
+`list-templates`, `render-message DATA_FILE`, `validate-message -s SUBJECT -f BODY [--agent A]`,
+`show-profile NAME`, `send-email -p PROFILE ...` — see
+[09_email-templates-profiles](09_email-templates-profiles.md).

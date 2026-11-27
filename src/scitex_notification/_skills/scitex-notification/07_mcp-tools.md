@@ -128,3 +128,11 @@ The tool schema names (from `tool_schemas.py`) differ from the MCP-exposed names
 | `get_notification_config` | `notification_config` |
 
 Use `mcp__scitex__notification_*` in `allowed-tools` to grant access to all notification MCP tools.
+
+
+## Message templates
+
+`notification_render_message(data, template="notice")` and
+`notification_validate_message(subject, body, template="notice", agent=None)`
+render / validate only; they never send. See
+[09_email-templates-profiles](09_email-templates-profiles.md).
