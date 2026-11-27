@@ -7,10 +7,21 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.12]
+
+First published release of the 0.2.10 / 0.2.11 work below: both tags exist
+but neither reached PyPI. The release pipeline's SIF scripts were stale
+(copied from another package; they required a Spartan-only apptainer shim
+and wrote to `/data`), so every test leg failed before building.
+
+### Fixed
+- Release pipeline: port the host-agnostic SIF scripts used by
+  scitex-logging (apptainer from the shim or PATH, job-owned RUNNER_TEMP
+  scratch, digest-verified image via `SCITEX_CI_SIF_SHA256`).
+
 ## [0.2.11]
 
-Version 0.2.10 was tagged but never reached PyPI (its release run was
-cancelled), so 0.2.11 is the first published release with `message_id`.
+Tagged, never published (see 0.2.12). Contents below.
 
 ### Security
 - STARTTLS now verifies the SMTP server certificate and host name

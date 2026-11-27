@@ -1,32 +1,10 @@
 #!/usr/bin/env bash
-# Runs INSIDE the reused scitex-ci SIF (apptainer exec — invoked via
-# exec-in-sif.sh). Publishes ./dist/* to PyPI via MANUAL OIDC Trusted
-# Publishing, then twine upload.
-#
-# WHY manual OIDC (not pypa/gh-action-pypi-publish): that action is a Docker
-# container action. Self-hosted Spartan compute nodes have NO Docker, so the
-# action cannot run there. PyPI Trusted Publishing is just an OIDC token
-# exchange over plain HTTPS, so we do it by hand:
-#
-#   1. Ask the GitHub Actions OIDC provider for a JWT with audience=pypi,
-#      using the per-job ACTIONS_ID_TOKEN_REQUEST_{TOKEN,URL} env vars (present
-#      because the publish job declares `permissions: id-token: write`).
-#      apptainer exec (no --cleanenv) passes those host env vars into the SIF.
-#   2. Exchange that JWT at PyPI's mint-token endpoint for a short-lived,
-#      scope-limited PyPI API token.
-#   3. twine upload dist/* with TWINE_USERNAME=__token__ and that minted token.
-#
-# This requires a Trusted Publisher to be configured on PyPI for
-# (project=scitex-notification, owner=ywatanabe1989, repo=scitex-notification,
-#  workflow=pypi-publish-and-github-release-on-tag.yml). It already is — the
-# previous releases published via the Docker action under the same trusted
-# publisher; only the *client* changes here, not PyPI's trust config.
-#
-# curl, python and (after a --target install) twine all live in the SIF.
-#
-# Fail-loud (operator directive): every step asserts non-empty output and
-# `set -euo pipefail`; any failure is a HARD error with the exact cause, never
-# a silent skip.
+# Publish the built artifacts inside the verified CI SIF using the job OIDC JWT.
+# The PyPI Trusted Publisher must match GitHub owner scitex-ai, repository
+# scitex-notification, workflow pypi-publish-and-github-release-on-tag.yml, and
+# environment pypi. The actual mint-token exchange verifies current trust;
+# historical successful publication does not prove that configuration today.
+# No static API-token fallback is used. Authentication/upload failure is fatal.
 set -euo pipefail
 
 V="${1:-3.12}"
@@ -48,11 +26,13 @@ fi
 echo "=== dist to publish ==="
 ls -l dist
 
-# --- writable scratch (compute-node HOME is RO inside the container) ---
+# --- fresh owned scratch bound over /tmp by the verified outer wrapper ---
 TMPDIR="/tmp/publish-scitex_notification-${GITHUB_RUN_ID:-0}-${GITHUB_RUN_ATTEMPT:-0}-$V"
 export TMPDIR
-rm -rf "$TMPDIR"
-mkdir -p "$TMPDIR/site" "$TMPDIR/uv-cache"
+rm -rf "${TMPDIR:?Notification publish scratch is empty}"
+mkdir -p "$TMPDIR/site" "$TMPDIR/uv-cache" "$TMPDIR/scitex" "$TMPDIR/pycache"
+export SCITEX_DIR="$TMPDIR/scitex"
+export PYTHONPYCACHEPREFIX="$TMPDIR/pycache"
 export UV_CACHE_DIR="$TMPDIR/uv-cache"
 export XDG_CACHE_HOME="$TMPDIR"
 export PIP_CACHE_DIR="$TMPDIR/pip-cache"
