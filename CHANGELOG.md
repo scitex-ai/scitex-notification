@@ -7,6 +7,18 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.2]
+
+### Added
+- Email profiles accept `SCITEX_NOTIFICATION_PROFILE_<NAME>_PASSWORD_GPG`
+  (plus optional `_GNUPGHOME`): a gpg ciphertext of the SMTP password,
+  decrypted into memory with `gpg --batch` at `get_profile` time. It never
+  prompts; a missing key or a passphrase-protected key is a `ProfileError`
+  naming the variable and gpg's exit code. Exactly one of `PASSWORD`,
+  `PASSWORD_FILE`, `PASSWORD_GPG` may be set. This moves the in-memory gpg
+  decrypt that scitex-storage's alarm carried privately into the profile,
+  so every ops job on a host shares one encrypted credential.
+
 ## [0.3.1]
 
 ### Fixed

@@ -4,6 +4,8 @@ import email
 import email.policy
 import email.utils
 import os
+import shutil
+import subprocess
 
 import pytest
 
@@ -27,7 +29,9 @@ ENV = {
 }
 
 NOTICE_SUBJECT = "[SciTeX][alarm] FYI: disk 91% on /data"
-NOTICE_BODY = f"■ DONE\n  - alarm raised\n\n{NOTICE_RULE}\nagent: alarm | host: h1 | card/PR: -\n"
+NOTICE_BODY = (
+    f"■ DONE\n  - alarm raised\n\n{NOTICE_RULE}\nagent: alarm | host: h1 | card/PR: -\n"
+)
 
 
 def _profile(port):
@@ -236,7 +240,9 @@ def test_send_with_profile_suppresses_a_repeat(smtp_server, tmp_path):
     profile = _profile(smtp_server.port)
     kwargs = dict(
         ssl_context=smtp_server.client_context,
-        dedupe_key="disk:/data", dedupe_window_s=3600, rate_limit_dir=tmp_path
+        dedupe_key="disk:/data",
+        dedupe_window_s=3600,
+        rate_limit_dir=tmp_path,
     )
     send_with_profile(profile, NOTICE_SUBJECT, NOTICE_BODY, **kwargs)
     smtp_server.thread.join(timeout=10)
@@ -260,3 +266,81 @@ def test_failed_send_is_not_recorded_for_dedupe(tmp_path):
     )
     # Assert
     assert result["would_send"] is True
+
+
+def _gpg(home, *args, **kwargs):
+    return subprocess.run(
+        ["gpg", "--homedir", str(home), "--batch", *args],
+        check=True,
+        capture_output=True,
+        timeout=60,
+        **kwargs,
+    )
+
+
+def _gpg_keyring(tmp_path):
+    """A throwaway passphrase-less gpg keyring; skip when gpg is absent."""
+    if shutil.which("gpg") is None:
+        pytest.skip("gpg not installed")
+    home = tmp_path / "gnupg"
+    home.mkdir(mode=0o700)
+    _gpg(home, "--passphrase", "", "--quick-gen-key", "t@example.org", "ed25519")
+    listing = _gpg(home, "--with-colons", "--list-keys", text=True).stdout
+    fpr = next(ln.split(":")[9] for ln in listing.splitlines() if ln.startswith("fpr"))
+    _gpg(home, "--passphrase", "", "--quick-add-key", fpr, "cv25519", "encr")
+    return home
+
+
+def _encrypt(home, tmp_path, plaintext):
+    cipher = tmp_path / "pw.gpg"
+    _gpg(
+        home,
+        "--yes",
+        "--trust-model",
+        "always",
+        "-r",
+        "t@example.org",
+        "-o",
+        str(cipher),
+        "--encrypt",
+        input=plaintext.encode(),
+    )
+    return cipher
+
+
+def _gpg_environ(cipher, home):
+    environ = {k: v for k, v in ENV.items() if k != P + "PASSWORD"}
+    environ[P + "PASSWORD_GPG"] = str(cipher)
+    environ[P + "GNUPGHOME"] = str(home)
+    return environ
+
+
+def test_password_gpg_is_decrypted_in_memory(tmp_path):
+    # Arrange
+    home = _gpg_keyring(tmp_path)
+    environ = _gpg_environ(_encrypt(home, tmp_path, "from-gpg\n"), home)
+    # Act
+    profile = get_profile("ops", environ)
+    # Assert
+    assert profile.password == "from-gpg"
+
+
+def test_password_gpg_without_the_key_names_the_variable(tmp_path):
+    # Arrange
+    home = _gpg_keyring(tmp_path)
+    cipher = _encrypt(home, tmp_path, "from-gpg\n")
+    empty_home = tmp_path / "empty-gnupg"
+    empty_home.mkdir(mode=0o700)
+    # Act
+    message = _problem(_gpg_environ(cipher, empty_home))
+    # Assert
+    assert P + "PASSWORD_GPG: cannot decrypt" in message
+
+
+def test_password_and_password_gpg_are_exclusive(tmp_path):
+    # Arrange
+    environ = {**ENV, P + "PASSWORD_GPG": str(tmp_path / "pw.gpg")}
+    # Act
+    message = _problem(environ)
+    # Assert
+    assert "set only one of" in message

@@ -14,7 +14,10 @@ package hardcodes no address; every value comes from::
     SCITEX_NOTIFICATION_PROFILE_<NAME>_SMTP_HOST      SMTP host (required)
     SCITEX_NOTIFICATION_PROFILE_<NAME>_SMTP_PORT      SMTP port (default 587)
     SCITEX_NOTIFICATION_PROFILE_<NAME>_PASSWORD       SMTP password, or
-    SCITEX_NOTIFICATION_PROFILE_<NAME>_PASSWORD_FILE  file holding it (mode 0600)
+    SCITEX_NOTIFICATION_PROFILE_<NAME>_PASSWORD_FILE  file holding it (mode 0600), or
+    SCITEX_NOTIFICATION_PROFILE_<NAME>_PASSWORD_GPG   gpg ciphertext of it, decrypted
+                                                      in memory (non-interactive)
+    SCITEX_NOTIFICATION_PROFILE_<NAME>_GNUPGHOME      gpg --homedir for that (optional)
 
 ``<NAME>`` is the profile name upper-cased with ``-`` turned into ``_``.
 """
@@ -25,6 +28,7 @@ import os
 import re
 import ssl
 import stat
+import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping, Optional, Union
@@ -92,6 +96,33 @@ def _read_password_file(path: str, variable: str) -> str:
     return file.read_text(encoding="utf-8").rstrip("\r\n")
 
 
+def _decrypt_password_gpg(path: str, homedir: Optional[str], variable: str) -> str:
+    """``gpg --batch --decrypt`` into memory: never prompts, never writes.
+
+    A key that needs a passphrase, or no key at all, is a :class:`ProfileError`
+    naming the variable and gpg's exit code, not a silent empty password.
+    gpg's stderr tail is kept for diagnosis; it never carries the plaintext.
+    """
+    cmd = ["gpg"]
+    if homedir:
+        cmd += ["--homedir", str(Path(homedir).expanduser())]
+    cmd += ["--quiet", "--batch", "--no-tty", "--decrypt", str(Path(path).expanduser())]
+    try:
+        proc = subprocess.run(cmd, capture_output=True, timeout=30, check=False)
+    except FileNotFoundError:
+        raise ProfileError(f"{variable}: gpg is not installed")
+    except subprocess.TimeoutExpired:
+        raise ProfileError(f"{variable}: gpg timed out (passphrase prompt?)")
+    password = proc.stdout.decode("utf-8", "replace").rstrip("\r\n")
+    if proc.returncode != 0 or not password:
+        tail = proc.stderr.decode("utf-8", "replace").strip()[-300:]
+        raise ProfileError(
+            f"{variable}: cannot decrypt {path} non-interactively "
+            f"(gpg rc={proc.returncode})" + (f": {tail}" if tail else "")
+        )
+    return password
+
+
 def get_profile(name: str, environ: Optional[Mapping[str, str]] = None) -> Profile:
     """Resolve profile ``name`` from ``SCITEX_NOTIFICATION_PROFILE_<NAME>_*``.
 
@@ -124,11 +155,30 @@ def get_profile(name: str, environ: Optional[Mapping[str, str]] = None) -> Profi
         problems.append(f"{prefix}SMTP_PORT must be a TCP port number")
         port = 0
     password, password_file = get("PASSWORD"), get("PASSWORD_FILE")
-    if password and password_file:
-        problems.append(f"set only one of {prefix}PASSWORD and {prefix}PASSWORD_FILE")
+    password_gpg = get("PASSWORD_GPG")
+    sources = [
+        s
+        for s, v in (
+            ("PASSWORD", password),
+            ("PASSWORD_FILE", password_file),
+            ("PASSWORD_GPG", password_gpg),
+        )
+        if v
+    ]
+    if len(sources) > 1:
+        problems.append("set only one of " + " and ".join(prefix + s for s in sources))
     elif password_file:
         try:
             password = _read_password_file(password_file, prefix + "PASSWORD_FILE")
+        except ProfileError as exc:
+            problems.append(str(exc))
+    elif password_gpg and not problems:
+        # Decrypt last, and only for an otherwise usable profile, so a
+        # misconfigured profile never spends a gpg call.
+        try:
+            password = _decrypt_password_gpg(
+                password_gpg, get("GNUPGHOME"), prefix + "PASSWORD_GPG"
+            )
         except ProfileError as exc:
             problems.append(str(exc))
     if problems:
