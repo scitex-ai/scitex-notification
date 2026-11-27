@@ -62,7 +62,7 @@ per-backend availability checks.
 
 ## Email profiles and rate-limit state
 
-`SCITEX_NOTIFICATION_PROFILE_<NAME>_{FROM,FROM_NAME,TO,SMTP_HOST,SMTP_PORT,PASSWORD,PASSWORD_FILE}`
+`SCITEX_NOTIFICATION_PROFILE_<NAME>_{FROM,FROM_NAME,TO,SMTP_HOST,SMTP_PORT,PASSWORD,PASSWORD_FILE,PASSWORD_GPG,GNUPGHOME}`
 define named sending identities; `SCITEX_NOTIFICATION_RATE_LIMIT_DIR` moves
 the repeat-suppression state. See
 [09_email-templates-profiles](09_email-templates-profiles.md).

@@ -88,7 +88,11 @@ Configured only through the environment (`<NAME>` = profile name upper-cased, `-
 | `SCITEX_NOTIFICATION_PROFILE_<NAME>_SMTP_HOST` | SMTP host (required) |
 | `SCITEX_NOTIFICATION_PROFILE_<NAME>_SMTP_PORT` | default 587 (STARTTLS) |
 | `SCITEX_NOTIFICATION_PROFILE_<NAME>_PASSWORD` | SMTP password, or |
-| `SCITEX_NOTIFICATION_PROFILE_<NAME>_PASSWORD_FILE` | a file holding it; must be a regular file you own with mode 0600 (no group/other bits) |
+| `SCITEX_NOTIFICATION_PROFILE_<NAME>_PASSWORD_FILE` | a file holding it; must be a regular file you own with mode 0600 (no group/other bits), or |
+| `SCITEX_NOTIFICATION_PROFILE_<NAME>_PASSWORD_GPG` | a gpg ciphertext of it, decrypted into memory with `gpg --batch` (never prompts; a key that needs a passphrase is a `ProfileError`) |
+| `SCITEX_NOTIFICATION_PROFILE_<NAME>_GNUPGHOME` | optional `gpg --homedir` for `PASSWORD_GPG` |
+
+Set only one password source. `PASSWORD_GPG` keeps the plaintext off disk, so several jobs on one host can share one encrypted credential.
 
 A profile never falls back to the generic `SCITEX_NOTIFICATION_EMAIL_*` chain, so it cannot pair its sender with another identity's password. Login and envelope sender are the bare `FROM` address; `FROM_NAME` only changes the header.
 
