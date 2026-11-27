@@ -234,3 +234,23 @@ def test_unverified_server_never_receives_the_login(smtp_server):
     smtp_server.thread.join(timeout=10)
     # Assert
     assert "login" not in smtp_server.record
+
+
+def test_send_email_gives_each_listed_recipient_its_own_envelope_address(smtp_server):
+    # Arrange: callers pass a To-header style list; one RCPT carrying the
+    # whole string is a malformed address that a real server rejects.
+    kwargs = dict(
+        from_addr="agent@example.org",
+        password="local-test-only",
+        smtp_host="127.0.0.1",
+        smtp_port=smtp_server.port,
+        ssl_context=smtp_server.client_context,
+    )
+    # Act
+    send_email("ops@example.org, Info <info@example.org>", "S", "B", **kwargs)
+    smtp_server.thread.join(timeout=10)
+    # Assert
+    assert smtp_server.record["envelope_to_all"] == [
+        "<ops@example.org>",
+        "<info@example.org>",
+    ]

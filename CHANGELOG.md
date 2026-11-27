@@ -9,6 +9,27 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 - Configure subprocess coverage declaratively via coverage.py `patch = ["subprocess"]`; `tests/conftest.py` no longer writes a `*_subprocess_coverage.pth` shim into site-packages or overwrites caller-owned `COVERAGE_PROCESS_START` / `COVERAGE_FILE`.
 
+## [0.3.2]
+
+### Added
+- Email profiles accept `SCITEX_NOTIFICATION_PROFILE_<NAME>_PASSWORD_GPG`
+  (plus optional `_GNUPGHOME`): a gpg ciphertext of the SMTP password,
+  decrypted into memory with `gpg --batch` at `get_profile` time. It never
+  prompts; a missing key or a passphrase-protected key is a `ProfileError`
+  naming the variable and gpg's exit code. Exactly one of `PASSWORD`,
+  `PASSWORD_FILE`, `PASSWORD_GPG` may be set. This moves the in-memory gpg
+  decrypt that scitex-storage's alarm carried privately into the profile,
+  so every ops job on a host shares one encrypted credential.
+
+## [0.3.1]
+
+### Fixed
+- `send_email` / the email backend with several recipients in `to`
+  (`"a@x.org, Name <b@x.org>"`): 0.3.0 passed the whole string as ONE envelope
+  recipient, which a real SMTP server rejects, so the mail reached nobody. Each
+  address now gets its own RCPT, parsed the way the `To` header is read. A `to`
+  with no address raises `ValueError`.
+
 ## [0.3.0]
 
 Readable `notice` layout. Breaking for hand-written notice bodies: the 0.2.x
