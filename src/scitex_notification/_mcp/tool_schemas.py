@@ -218,10 +218,13 @@ def get_tool_schemas() -> list[types.Tool]:  # type: ignore[name-defined]
             description=(
                 "Check an already-written email subject and body against a "
                 "message template (default `notice`: subject "
-                "`[SciTeX][<agent>] <KIND>: <title>`, sections NEEDS YOU / DONE "
-                "/ RUNNING (no action needed) in order, numbered questions with "
-                "`-> recommend:`, footer `--` + `agent: | host: | card/PR:`, at "
-                "most 20 lines). Returns `violations` (empty when valid)."
+                "`[SciTeX][<agent>] <KIND>: <title>`; section headers `■ NEEDS "
+                "YOU` / `■ DONE` / `■ RUNNING (no action needed)` in order, one "
+                "blank line between sections and questions; numbered questions "
+                "with one indented option per line, `   -> recommend: X` and "
+                "`   reply: \"N X\"`; bullets `  - `; a `─` rule then "
+                "`agent: | host: | card/PR:`; at most 40 content lines). Returns "
+                "`violations` (empty when valid)."
             ),
             inputSchema={
                 "type": "object",

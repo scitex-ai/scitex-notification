@@ -52,6 +52,7 @@ from ._templates import (  # noqa: E402
     list_templates,
     load_message_data,
     register_template,
+    render_message_html,
     render_template,
     validate_message,
 )
@@ -76,6 +77,7 @@ __all__ = [
     "list_templates",
     "load_message_data",
     "register_template",
+    "render_message_html",
     "render_template",
     "send_with_profile",
     "validate_message",

@@ -159,6 +159,7 @@ def send_with_profile(
     template_context: Optional[Mapping[str, Any]] = None,
     rate_limit_dir: Optional[Union[str, Path]] = None,
     ssl_context: Optional[ssl.SSLContext] = None,
+    html_body: Optional[str] = None,
 ) -> dict:
     """Send ``subject``/``body`` as ``profile`` (a name or a :class:`Profile`).
 
@@ -174,7 +175,9 @@ def send_with_profile(
     Returns a dict with ``status`` (``sent`` / ``dry_run`` / ``suppressed``),
     the From/To used and the message id. SMTP errors propagate (fail loud).
     STARTTLS verifies the server certificate; ``ssl_context`` overrides the
-    default context (for a private CA).
+    default context (for a private CA). ``html_body`` adds an HTML
+    alternative of the same content (see
+    :func:`~scitex_notification.render_message_html`).
     """
     resolved = get_profile(profile) if isinstance(profile, str) else profile
     if not subject or "\r" in subject or "\n" in subject:
@@ -191,6 +194,7 @@ def send_with_profile(
         "message_id": message_id,
         "template": template,
         "dedupe_key": dedupe_key,
+        "html": html_body is not None,
     }
     limiter = (
         RateLimiter(dedupe_window_s, rate_limit_dir) if dedupe_key is not None else None
@@ -209,6 +213,7 @@ def send_with_profile(
             smtp_port=resolved.smtp_port,
             message_id=message_id,
             ssl_context=ssl_context,
+            html_body=html_body,
         )
 
     if dry_run:

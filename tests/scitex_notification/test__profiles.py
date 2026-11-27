@@ -14,6 +14,7 @@ from scitex_notification import (
     get_profile,
     send_with_profile,
 )
+from scitex_notification._templates import NOTICE_RULE
 
 P = "SCITEX_NOTIFICATION_PROFILE_OPS_"
 ENV = {
@@ -26,7 +27,7 @@ ENV = {
 }
 
 NOTICE_SUBJECT = "[SciTeX][alarm] FYI: disk 91% on /data"
-NOTICE_BODY = "DONE\n- alarm raised\n--\nagent: alarm | host: h1 | card/PR: -\n"
+NOTICE_BODY = f"■ DONE\n  - alarm raised\n\n{NOTICE_RULE}\nagent: alarm | host: h1 | card/PR: -\n"
 
 
 def _profile(port):

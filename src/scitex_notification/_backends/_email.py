@@ -12,6 +12,7 @@ import re
 import smtplib
 import ssl
 from datetime import datetime
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr
 from typing import Optional
@@ -38,7 +39,8 @@ def _build_message(
     from_addr: str,
     message_id: Optional[str] = None,
     from_name: Optional[str] = None,
-) -> MIMEText:
+    html_body: Optional[str] = None,
+):
     """Build the plain-text message, optionally with a caller-chosen Message-ID.
 
     A caller-chosen Message-ID lets the sender later match replies by their
@@ -48,12 +50,23 @@ def _build_message(
     ``from_name`` sets the display name of the ``From`` header
     (``"Name" <addr>``; non-ASCII names are RFC 2047 encoded). It never
     changes the address itself, which stays ``from_addr``.
+
+    ``html_body`` adds an HTML rendering of the same content: the message
+    becomes ``multipart/alternative`` with the plain text first, so clients
+    that prefer plain text (and every reply quote) still use ``body``.
     """
     if message_id is not None and not _MESSAGE_ID.match(message_id):
         raise ValueError("message_id must look like <local@domain>")
     if from_name is not None and any(c in from_name for c in "\r\n"):
         raise ValueError("from_name must be a single line (no CR/LF)")
-    msg = MIMEText(body)
+    if html_body is not None and not html_body.strip():
+        raise ValueError("html_body is empty; omit it for a plain-text message")
+    if html_body is None:
+        msg = MIMEText(body)
+    else:
+        msg = MIMEMultipart("alternative")
+        msg.attach(MIMEText(body))
+        msg.attach(MIMEText(html_body, "html"))
     msg["Subject"] = subject
     msg["From"] = formataddr((from_name, from_addr)) if from_name else from_addr
     msg["To"] = to
@@ -74,6 +87,7 @@ def _send_email(
     from_name: Optional[str] = None,
     env_fallback: bool = True,
     ssl_context: Optional[ssl.SSLContext] = None,
+    html_body: Optional[str] = None,
 ) -> None:
     """Send an email via SMTP using stdlib only.
 
@@ -104,6 +118,9 @@ def _send_email(
         Display name for the ``From`` header (``"Name" <from_addr>``). The
         SMTP login and the envelope sender stay the bare address. CR/LF is
         rejected with ``ValueError``.
+    html_body : str, optional
+        HTML rendering of ``body``; sent as a ``multipart/alternative`` part
+        after the plain text. Omitted: a single text/plain message.
     env_fallback : bool
         ``False`` uses exactly the given values and never consults the env
         chains below (a profile must not borrow another identity's password);
@@ -118,7 +135,9 @@ def _send_email(
     if not env_fallback:
         if not from_addr or not smtp_host:
             raise ValueError("from_addr and smtp_host are required without env fallback")
-        msg = _build_message(to, subject, body, from_addr, message_id, from_name)
+        msg = _build_message(
+            to, subject, body, from_addr, message_id, from_name, html_body
+        )
         _deliver(
             msg, to, from_addr, password, smtp_host, smtp_port or 587, ssl_context
         )
@@ -160,7 +179,9 @@ def _send_email(
         port_str = _getenv_email("SCITEX_NOTIFICATION_EMAIL_SMTP_PORT")
         resolved_port = int(port_str) if port_str else 587
 
-    msg = _build_message(to, subject, body, resolved_from, message_id, from_name)
+    msg = _build_message(
+        to, subject, body, resolved_from, message_id, from_name, html_body
+    )
     _deliver(
         msg,
         to,
@@ -197,6 +218,7 @@ def send_email(
     message_id: Optional[str] = None,
     from_name: Optional[str] = None,
     ssl_context: Optional[ssl.SSLContext] = None,
+    html_body: Optional[str] = None,
 ) -> None:
     """Send a plain-text email synchronously with explicit credentials.
 
@@ -213,7 +235,9 @@ def send_email(
     Pass ``from_name`` to show a display name (``"Name" <from_addr>``) in the
     ``From`` header; the SMTP login and envelope sender stay ``from_addr``.
     STARTTLS verifies the server certificate (``ssl.create_default_context()``
-    unless ``ssl_context`` is given).
+    unless ``ssl_context`` is given). Pass ``html_body`` to add an HTML
+    alternative of the same content (``multipart/alternative``, plain first);
+    for a template, :func:`~scitex_notification.render_message_html` builds it.
 
     Raises any ``smtplib`` error on failure (fail-loud — no silent ``False``).
     """
@@ -228,6 +252,7 @@ def send_email(
         message_id=message_id,
         from_name=from_name,
         ssl_context=ssl_context,
+        html_body=html_body,
     )
 
 

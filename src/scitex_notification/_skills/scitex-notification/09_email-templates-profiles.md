@@ -1,7 +1,7 @@
 ---
 description: |
   [TOPIC] Email message templates (built-in `notice`), env-configured sender/recipient profiles, and per-key repeat suppression.
-  [DETAILS] render_template / validate_message / register_template / MessageFormatError; get_profile / send_with_profile; RateLimiter; send_email(from_name=); CLI render-message, validate-message, send-email, show-profile, list-templates; MCP notification_render_message / notification_validate_message.
+  [DETAILS] render_template / validate_message / render_message_html / register_template / MessageFormatError; get_profile / send_with_profile; RateLimiter; send_email(from_name=, html_body=); CLI render-message, validate-message, send-email, show-profile, list-templates; MCP notification_render_message / notification_validate_message.
 tags: [scitex-notification-email-templates-profiles]
 ---
 
@@ -20,27 +20,38 @@ Three independent pieces that compose in `send_with_profile`:
 ```text
 Subject: [SciTeX][<agent>] <KIND>: <one line>          KIND: NEEDS-YOU | DONE | STOPPED | FYI
 
-NEEDS YOU
+■ NEEDS YOU
 1. <question, one line>
-   A) <option>  B) <option>  -> recommend: A
+   A) <option>
+   B) <option>
+   -> recommend: A
    reply: "1 A"
-DONE
-- <outcome, one line, with link>
-RUNNING (no action needed)
-- <item>
---
+
+2. <question>
+   A) ...
+
+■ DONE
+  - <outcome, one line, with link>
+
+■ RUNNING (no action needed)
+  - <item>
+
+────────────────────────────────────────
 agent: <name> | host: <host> | card/PR: <ids>
 ```
 
 Rules the validator enforces (all violations are reported at once, as `MessageFormatError.violations`):
 
 - subject is `[SciTeX][<agent>] <KIND>: <title>` on one line, KIND from the list;
-- the first body line is a section header; headers are exactly the three above, in that order, each at most once; empty sections are omitted;
-- NEEDS YOU holds numbered questions (1, 2, ...), each with an options line ending `-> recommend: X` (X one of its options) and a `reply: "N X"` line; a NEEDS-YOU subject needs at least one; a NEEDS YOU section needs a NEEDS-YOU subject;
-- DONE / RUNNING items are single `- ` lines;
-- footer: `--` then `agent: <name> | host: <host> | card/PR: <ids>`, agent matching the subject (and `agent=` when given);
-- at most `NOTICE_MAX_LINES` (20) non-empty lines, each at most `NOTICE_MAX_LINE_CHARS` (200);
+- the first body line is a section header; headers are exactly `■ NEEDS YOU`, `■ DONE`, `■ RUNNING (no action needed)` (`NOTICE_SECTION_MARK` + a name from `NOTICE_SECTIONS`), in that order, each at most once; empty sections are omitted;
+- blank lines: exactly one before every section header but the first, before every question but the first in its section, and before the footer rule; none anywhere else (not after a header, not inside a question, not between bullets);
+- NEEDS YOU holds numbered questions (1, 2, ...). Each is a block: the question line, then one option per line indented three spaces (`   A) ...`, `   B) ...`, at least two, letters in order), then `   -> recommend: X` (X one of its options), then `   reply: "N X"` (N its number, X its recommendation); a NEEDS-YOU subject needs at least one; a NEEDS YOU section needs a NEEDS-YOU subject;
+- DONE / RUNNING items are single bullets indented two spaces: `  - ...`;
+- footer: a rule (`NOTICE_RULE`, 40 x `─`; a hand-typed rule of 10-80 `─` or `-` is accepted) then `agent: <name> | host: <host> | card/PR: <ids>`, agent matching the subject (and `agent=` when given);
+- at most `NOTICE_MAX_LINES` (40) content lines (questions, options, recommendation and reply lines, bullets; blank lines, headers, the rule and the footer are not counted), each line at most `NOTICE_MAX_LINE_CHARS` (200); no tabs;
 - no credential-shaped text (private keys, GitHub/OpenAI/Slack/AWS tokens, `password=...`). Best effort, not a secret scanner.
+
+The 0.2.x layout (bare headers, options on one line, `--` footer) is rejected with a message naming the new form.
 
 Render from data instead of writing it by hand:
 
@@ -61,7 +72,9 @@ stxn.validate_message("notice", subject, body, agent="worker-1")  # hand-written
 data = stxn.load_message_data("notice.yaml")                     # dict, .json or .yaml
 ```
 
-Your own template: `register_template(name, render, validate, replace=False)` where `render(data) -> (subject, body)` and `validate(subject, body, **context)` raises `MessageFormatError`. `render_template` always runs the validator on what it rendered. `list_templates()` lists names.
+HTML alternative: `stxn.render_message_html("notice", subject, body)` validates the message and returns an HTML document with the same structure (an `<h3>` per section, an ordered list of questions with their options, bullet lists, an `<hr>` before the footer). Every text is HTML-escaped; only http(s) URLs become links. Send it as the second part of a `multipart/alternative` message with `send_email(..., html_body=html)` or `send_with_profile(..., html_body=html)`; the plain text stays the first part, so replies quote the plain text.
+
+Your own template: `register_template(name, render, validate, html=None, replace=False)` where `render(data) -> (subject, body)`, `validate(subject, body, **context)` raises `MessageFormatError`, and the optional `html(subject, body) -> str` renders a validated message as HTML. `render_template` always runs the validator on what it rendered. `list_templates()` lists names.
 
 ## Profiles
 
@@ -124,7 +137,7 @@ State: `$SCITEX_NOTIFICATION_RATE_LIMIT_DIR`, else `$SCITEX_DIR/notification/run
 
 ## Display name on plain `send_email`
 
-`send_email(to, subject, body, *, from_addr=, from_name=None, ...)` sets `From: "<from_name>" <from_addr>` (RFC 2047 encoded when non-ASCII; CR/LF rejected). SMTP login and envelope sender stay `from_addr`. STARTTLS verifies the server certificate (system CA store, host name checked); pass `ssl_context=ssl.create_default_context(cafile=...)` for a private CA. Feature-detect with `"from_name" in inspect.signature(stxn.send_email).parameters`.
+`send_email(to, subject, body, *, from_addr=, from_name=None, html_body=None, ...)` sets `From: "<from_name>" <from_addr>` (RFC 2047 encoded when non-ASCII; CR/LF rejected). SMTP login and envelope sender stay `from_addr`. STARTTLS verifies the server certificate (system CA store, host name checked); pass `ssl_context=ssl.create_default_context(cafile=...)` for a private CA. Feature-detect with `"from_name" in inspect.signature(stxn.send_email).parameters`.
 
 ## CLI
 
