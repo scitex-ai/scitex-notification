@@ -14,7 +14,7 @@ import ssl
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.utils import formataddr
+from email.utils import formataddr, getaddresses
 from typing import Optional
 
 from ._types import BaseNotifyBackend, NotifyLevel, NotifyResult
@@ -193,6 +193,19 @@ def _send_email(
     )
 
 
+def _envelope_recipients(to: str) -> list[str]:
+    """One envelope address per recipient in a ``To`` string.
+
+    ``to`` may list several recipients (``"a@x.org, Name <b@x.org>"``), as the
+    ``To`` header does. Passed whole as one RCPT it is a single malformed
+    address that a real server rejects, so split it the way the header is read.
+    """
+    addresses = [addr for _name, addr in getaddresses([to]) if addr]
+    if not addresses:
+        raise ValueError("no recipient address in 'to'")
+    return addresses
+
+
 def _deliver(msg, to, from_addr, password, host, port, context=None) -> None:
     """Verified STARTTLS submission; login and envelope sender are the bare address.
 
@@ -203,7 +216,7 @@ def _deliver(msg, to, from_addr, password, host, port, context=None) -> None:
         server.starttls(context=context or ssl.create_default_context())
         if password:
             server.login(from_addr, password)
-        server.send_message(msg, from_addr=from_addr, to_addrs=[to])
+        server.send_message(msg, from_addr=from_addr, to_addrs=_envelope_recipients(to))
 
 
 def send_email(

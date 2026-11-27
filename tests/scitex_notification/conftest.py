@@ -59,6 +59,9 @@ class _LocalSMTPServer:
                 reply("250 ok")
             elif verb == "RCPT":
                 self.record["envelope_to"] = line.split(":", 1)[1].strip()
+                self.record.setdefault("envelope_to_all", []).append(
+                    self.record["envelope_to"]
+                )
                 reply("250 ok")
             elif verb == "DATA":
                 reply("354 go")
