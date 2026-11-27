@@ -60,8 +60,10 @@ class NotifyServer:
             list_backends_handler,
             notify_by_level_handler,
             notify_handler,
+            render_message_handler,
             skills_get_handler,
             skills_list_handler,
+            validate_message_handler,
         )
         from ._mcp.tool_schemas import get_tool_schemas
 
@@ -87,6 +89,10 @@ class NotifyServer:
                 return await skills_list_handler()
             elif name == "notification_skills_get":
                 return await skills_get_handler(**arguments)
+            elif name == "notification_render_message":
+                return await render_message_handler(**arguments)
+            elif name == "notification_validate_message":
+                return await validate_message_handler(**arguments)
             else:
                 raise ValueError(f"Unknown tool: {name}")
 

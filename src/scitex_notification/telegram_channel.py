@@ -50,7 +50,7 @@ _load_env()
 
 try:
     import mcp.types as types
-    from mcp.server import NotificationOptions, Server
+    from mcp.server import Server
     from mcp.server.models import InitializationOptions
     from mcp.server.stdio import stdio_server
 

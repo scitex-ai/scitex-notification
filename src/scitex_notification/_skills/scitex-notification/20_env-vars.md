@@ -58,3 +58,11 @@ Read at import time and on demand by `scitex_notification`.
 
 See `08_configuration.md` for the YAML schema and `05_backends.md` for
 per-backend availability checks.
+
+
+## Email profiles and rate-limit state
+
+`SCITEX_NOTIFICATION_PROFILE_<NAME>_{FROM,FROM_NAME,TO,SMTP_HOST,SMTP_PORT,PASSWORD,PASSWORD_FILE}`
+define named sending identities; `SCITEX_NOTIFICATION_RATE_LIMIT_DIR` moves
+the repeat-suppression state. See
+[09_email-templates-profiles](09_email-templates-profiles.md).

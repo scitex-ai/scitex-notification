@@ -193,6 +193,50 @@ def get_tool_schemas() -> list[types.Tool]:  # type: ignore[name-defined]
                 "required": ["name"],
             },
         ),
+        types.Tool(
+            name="notification_render_message",
+            description=(
+                "Render structured data into an email subject and body with a "
+                "message template, validated and never sent. The built-in "
+                "`notice` template takes `kind` (NEEDS-YOU / DONE / STOPPED / "
+                "FYI), `title`, `questions` [{text, options, recommend}], "
+                "`done` [..], `running` [..] and `meta` {agent, host, refs}. Use "
+                "when composing a short notice a person must act on quickly. "
+                "Returns `subject`/`body`, or `violations` listing every problem."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "data": {"type": "object", "description": "Template data."},
+                    "template": {"type": "string", "default": "notice"},
+                },
+                "required": ["data"],
+            },
+        ),
+        types.Tool(
+            name="notification_validate_message",
+            description=(
+                "Check an already-written email subject and body against a "
+                "message template (default `notice`: subject "
+                "`[SciTeX][<agent>] <KIND>: <title>`, sections NEEDS YOU / DONE "
+                "/ RUNNING (no action needed) in order, numbered questions with "
+                "`-> recommend:`, footer `--` + `agent: | host: | card/PR:`, at "
+                "most 20 lines). Returns `violations` (empty when valid)."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "subject": {"type": "string"},
+                    "body": {"type": "string"},
+                    "template": {"type": "string", "default": "notice"},
+                    "agent": {
+                        "type": "string",
+                        "description": "Also require the message to name this agent.",
+                    },
+                },
+                "required": ["subject", "body"],
+            },
+        ),
     ]
 
 

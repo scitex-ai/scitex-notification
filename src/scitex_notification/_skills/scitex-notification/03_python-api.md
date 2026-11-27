@@ -57,3 +57,6 @@ asyncio.run(stxn.alert_async("Hi"))
 - `06_python-api.md` — extended reference
 - `07_mcp-tools.md` — MCP tools that wrap these calls
 - `08_configuration.md` — YAML config and level-based routing
+
+- `09_email-templates-profiles.md` — `render_template`, `validate_message`,
+  `get_profile`, `send_with_profile`, `RateLimiter`, `send_email(from_name=)`

@@ -38,13 +38,23 @@ from typing import Optional, Union
 
 from ._env_loader import load_scitex_notification_env as _load_env
 
-_load_env()
+_load_env()  # must run before the backend imports below
 
-from ._backends import NotifyLevel as _AlertLevel
-from ._backends import available_backends as _available_backends
-from ._backends import get_backend as _get_backend
-from ._backends import send_email
-from ._notify_legacy import notify, send_gmail
+from ._backends import NotifyLevel as _AlertLevel  # noqa: E402
+from ._backends import available_backends as _available_backends  # noqa: E402
+from ._backends import get_backend as _get_backend  # noqa: E402
+from ._backends import send_email  # noqa: E402
+from ._notify_legacy import notify, send_gmail  # noqa: E402
+from ._profiles import Profile, ProfileError, get_profile, send_with_profile  # noqa: E402
+from ._rate_limit import RateLimiter  # noqa: E402
+from ._templates import (  # noqa: E402
+    MessageFormatError,
+    list_templates,
+    load_message_data,
+    register_template,
+    render_template,
+    validate_message,
+)
 
 try:
     from importlib.metadata import PackageNotFoundError
@@ -58,6 +68,17 @@ try:
 except ImportError:  # pragma: no cover — only on ancient Pythons
     __version__ = "0.0.0+local"
 __all__ = [
+    "MessageFormatError",
+    "Profile",
+    "ProfileError",
+    "RateLimiter",
+    "get_profile",
+    "list_templates",
+    "load_message_data",
+    "register_template",
+    "render_template",
+    "send_with_profile",
+    "validate_message",
     "alert",
     "alert_async",
     "available_backends",

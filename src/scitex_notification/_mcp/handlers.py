@@ -18,6 +18,8 @@ __all__ = [
     "get_config_handler",
     "skills_list_handler",
     "skills_get_handler",
+    "render_message_handler",
+    "validate_message_handler",
 ]
 
 
@@ -335,6 +337,34 @@ async def skills_get_handler(name: str) -> dict:
         }
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+async def render_message_handler(data: dict, template: str = "notice") -> dict:
+    """Render structured data with a message template (validated, never sent)."""
+    from .._templates import MessageFormatError, render_template
+
+    try:
+        subject, body = render_template(template, data)
+    except MessageFormatError as exc:
+        return {"success": False, "template": template, "violations": exc.violations}
+    except (KeyError, ValueError, TypeError) as exc:
+        return {"success": False, "template": template, "error": str(exc)}
+    return {"success": True, "template": template, "subject": subject, "body": body}
+
+
+async def validate_message_handler(
+    subject: str, body: str, template: str = "notice", agent: Optional[str] = None
+) -> dict:
+    """Validate an already-written subject/body against a message template."""
+    from .._templates import MessageFormatError, validate_message
+
+    try:
+        validate_message(template, subject, body, **({"agent": agent} if agent else {}))
+    except MessageFormatError as exc:
+        return {"success": False, "template": template, "violations": exc.violations}
+    except KeyError as exc:
+        return {"success": False, "template": template, "error": str(exc)}
+    return {"success": True, "template": template, "violations": []}
 
 
 # EOF
