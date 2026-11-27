@@ -7,6 +7,8 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- Configure subprocess coverage declaratively via coverage.py `patch = ["subprocess"]`; `tests/conftest.py` no longer writes a `*_subprocess_coverage.pth` shim into site-packages or overwrites caller-owned `COVERAGE_PROCESS_START` / `COVERAGE_FILE`.
+
 ## [0.3.0]
 
 Readable `notice` layout. Breaking for hand-written notice bodies: the 0.2.x
