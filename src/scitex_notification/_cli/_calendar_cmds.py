@@ -41,6 +41,9 @@ def calendar_group():
     Configure SCITEX_NOTIFICATION_GCAL_ACCOUNT (and optionally
     SCITEX_NOTIFICATION_GCAL_CLIENT_FILE / _TOKEN_FILE), then run
     `calendar authorize` once as the account owner.
+
+    Setup guide (Google Cloud client, SSH tunnel, 7-day Testing expiry):
+    https://scitex-notification.readthedocs.io/en/latest/calendar_setup.html
     """
 
 

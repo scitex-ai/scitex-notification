@@ -75,6 +75,7 @@ Backends
    quickstart
    backends
    configuration
+   calendar_setup
    env_vars
 
 .. toctree::

@@ -323,6 +323,23 @@ export SCITEX_NOTIFICATION_TWILIO_TO=+XX-XXX-XXX-XXXX
 
 </details>
 
+### Google Calendar Milestones
+
+Record milestones (release published, PR merged, result verified) as
+zero-duration, Free, Private calendar entries (0.4.0+):
+
+```bash
+export SCITEX_NOTIFICATION_GCAL_ACCOUNT=<account>
+scitex-notification calendar authorize          # one-time owner consent
+scitex-notification calendar add-milestone -c "<Calendar>" -t "<title>" \
+    --at 2026-01-01T09:00:00+09:00 -n "<note>" --dry-run
+```
+
+One-time Google Cloud and host setup, SSH tunnels for a remote host, the
+Testing-mode 7-day token expiry and troubleshooting:
+[Google Calendar Channel Setup](./docs/sphinx/calendar_setup.rst)
+([online](https://scitex-notification.readthedocs.io/en/latest/calendar_setup.html)).
+
 ## Part of SciTeX
 
 `scitex-notification` is part of [**SciTeX**](https://scitex.ai). Install via
