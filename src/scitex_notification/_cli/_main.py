@@ -14,6 +14,7 @@ import inspect
 
 import click
 
+from ._calendar_cmds import calendar_group
 from ._helpers import group_to_json, print_help_recursive
 from ._mcp_cmds import mcp
 from ._message_cmds import COMMANDS as _MESSAGE_COMMANDS
@@ -122,6 +123,9 @@ for _command in _MESSAGE_COMMANDS:
 cli.add_command(_deprecated_redirect("sms", "send-sms"))
 cli.add_command(_deprecated_redirect("backends", "list-backends"))
 cli.add_command(_deprecated_redirect("config", "show-config"))
+
+# Google Calendar milestones
+cli.add_command(calendar_group)
 
 # Register mcp subgroup from _mcp_cmds
 cli.add_command(mcp)

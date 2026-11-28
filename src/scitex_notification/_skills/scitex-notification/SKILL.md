@@ -33,6 +33,7 @@ Multi-backend alerting with automatic fallback. One `alert()` covers local and r
 * [07_mcp-tools](07_mcp-tools.md) — MCP tool schemas
 * [08_configuration](08_configuration.md) — YAML config, `UIConfig`, level-based routing
 * [09_email-templates-profiles](09_email-templates-profiles.md) — `notice` template + validation, env-configured email profiles, repeat suppression, `send_email(from_name=)`
+* [10_calendar-milestones](10_calendar-milestones.md) — zero-duration Free/Private Google Calendar milestones: `calendar add-milestone`, account + duplicate checks, owner OAuth setup
 
 ### Environment
 * [20_env-vars](20_env-vars.md) — `SCITEX_NOTIFICATION_*` env vars

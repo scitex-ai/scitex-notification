@@ -66,3 +66,12 @@ per-backend availability checks.
 define named sending identities; `SCITEX_NOTIFICATION_RATE_LIMIT_DIR` moves
 the repeat-suppression state. See
 [09_email-templates-profiles](09_email-templates-profiles.md).
+
+
+## Calendar milestones
+
+`SCITEX_NOTIFICATION_GCAL_ACCOUNT` (required: the account entries are written
+as), `SCITEX_NOTIFICATION_GCAL_CLIENT_FILE` (Desktop OAuth client JSON, 0600)
+and `SCITEX_NOTIFICATION_GCAL_TOKEN_FILE` (refresh token from `calendar
+authorize`, 0600); both files default to `$SCITEX_DIR/notification/secrets/`.
+See [10_calendar-milestones](10_calendar-milestones.md).

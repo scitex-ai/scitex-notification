@@ -9,6 +9,7 @@ import html as _html
 
 from ._notice import _URL, NOTICE_SECTIONS, _parse_notice
 
+
 def _inline(text: str) -> str:
     """Escape ``text`` for HTML and link its http(s) URLs."""
     escaped = _html.escape(text, quote=True)
