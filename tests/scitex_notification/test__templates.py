@@ -9,10 +9,10 @@ from scitex_notification import (
     list_templates,
     load_message_data,
     register_template,
+    render_message_html,
     render_template,
     validate_message,
 )
-from scitex_notification import render_message_html
 from scitex_notification._templates import NOTICE_MAX_LINES, NOTICE_RULE
 
 SUBJECT = "[SciTeX][worker-1] NEEDS-YOU: storage quota decision"

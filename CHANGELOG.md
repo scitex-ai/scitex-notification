@@ -7,6 +7,24 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.0]
+
+### Added
+- Google Calendar milestones: `add_milestone` / `scitex-notification calendar
+  add-milestone` write one zero-duration entry (start == end, Asia/Tokyo),
+  Free, Private, reminders off, calendar colour when it is SciTeX navy else
+  event colour 9. Before writing it verifies the token's account equals
+  `SCITEX_NOTIFICATION_GCAL_ACCOUNT`, resolves the calendar by exact name with
+  write access, and reports an entry with the same title at the same second
+  as `exists` instead of writing it twice; after writing it reads the event
+  back and raises `CalendarError` on any broken rule. `--dry-run` runs every
+  check read-only; `--offline` prints the event body. `calendar authorize`
+  is the one-time owner consent (installed-app OAuth with PKCE on loopback,
+  scopes `calendar.calendarlist.readonly` + `calendar.events`), storing the
+  refresh token 0600 only after the account check. `calendar list-calendars`
+  lists names, colours and descriptions. Standard library only.
+
+### Changed
 - Configure subprocess coverage declaratively via coverage.py `patch = ["subprocess"]`; `tests/conftest.py` no longer writes a `*_subprocess_coverage.pth` shim into site-packages or overwrites caller-owned `COVERAGE_PROCESS_START` / `COVERAGE_FILE`.
 
 ## [0.3.2]

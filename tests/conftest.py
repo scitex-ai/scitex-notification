@@ -6,7 +6,6 @@ See ``scitex_dev._skills.general.05_development_06_subprocess-coverage``.
 """
 from __future__ import annotations
 
-
 # ===== existing conftest content below =====
 """Pytest fixtures and rootdir marker for this package.
 

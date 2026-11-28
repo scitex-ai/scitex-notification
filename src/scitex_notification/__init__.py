@@ -44,6 +44,15 @@ from ._backends import NotifyLevel as _AlertLevel  # noqa: E402
 from ._backends import available_backends as _available_backends  # noqa: E402
 from ._backends import get_backend as _get_backend  # noqa: E402
 from ._backends import send_email  # noqa: E402
+from ._calendar import (  # noqa: E402
+    CalendarError,
+    CalendarInputError,
+    add_milestone,
+    authorize_calendar,
+    build_milestone_event,
+    list_calendars,
+    load_credentials,
+)
 from ._notify_legacy import notify, send_gmail  # noqa: E402
 from ._profiles import Profile, ProfileError, get_profile, send_with_profile  # noqa: E402
 from ._rate_limit import RateLimiter  # noqa: E402
@@ -69,6 +78,13 @@ try:
 except ImportError:  # pragma: no cover — only on ancient Pythons
     __version__ = "0.0.0+local"
 __all__ = [
+    "CalendarError",
+    "CalendarInputError",
+    "add_milestone",
+    "authorize_calendar",
+    "build_milestone_event",
+    "list_calendars",
+    "load_credentials",
     "MessageFormatError",
     "Profile",
     "ProfileError",
