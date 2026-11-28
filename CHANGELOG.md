@@ -7,6 +7,13 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Docs: "Google Calendar Channel Setup" guide (`docs/sphinx/calendar_setup.rst`):
+  Google Cloud API / audience / Desktop client, host secrets layout,
+  authorize over a forward or reverse SSH tunnel, the Testing-mode ~7-day
+  refresh-token expiry, and a troubleshooting table. Linked from the README
+  and the `calendar-milestones` skill.
+
 ## [0.4.0]
 
 ### Added

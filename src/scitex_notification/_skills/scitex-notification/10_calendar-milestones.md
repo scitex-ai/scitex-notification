@@ -76,3 +76,11 @@ stxn.add_milestone(
 
 Scopes are the two narrowest that work: `calendar.calendarlist.readonly`
 and `calendar.events`. No secret is printed or returned.
+
+For a non-Workspace account use an **External** app and add the account
+as a **Test user** (otherwise consent fails with `403 access_denied`).
+In Testing status Google expires the refresh token after ~7 days: writes
+then fail with `invalid_grant`; re-run `calendar authorize`, or publish the
+app to stop the expiry. Full guide with both SSH tunnel options and a
+troubleshooting table: `docs/sphinx/calendar_setup.rst`
+(https://scitex-notification.readthedocs.io/en/latest/calendar_setup.html).
